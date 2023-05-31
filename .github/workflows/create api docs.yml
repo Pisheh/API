@@ -19,11 +19,9 @@ jobs:
         python-version: 3.10.6
         cache: 'pip' # caching pip dependencies
     - run: pip install -r requirements.txt
-    - name: set environment variables
     - run: |
         export JWT_SECRET_KEY=$(openssl rand -base64 32)
         export JWT_REFRESH_SECRET_KEY=$(openssl rand -base64 32)
-    - name: Export API doc
     - run: python -c "from json import dump; from app.app import app; dump(app.openapi(),open('api.json','w'))"
     
     - name: swagger ui
