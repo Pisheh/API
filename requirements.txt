@@ -3,4 +3,5 @@ jose==1.0.0
 passlib==1.7.4
 peewee==3.15.2
 pydantic==1.10.8
+pydantic[email]
 python_jose==3.3.0
