@@ -8,8 +8,13 @@ from .dbmodel import Seeker, Employer
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 ALGORITHM = "HS256"
-JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]  # should be kept secret
-JWT_REFRESH_SECRET_KEY = os.environ["JWT_REFRESH_SECRET_KEY"]  # should be kept secret
+JWT_SECRET_KEY = os.environ.get(
+    "JWT_SECRET_KEY", "a not secure secret key because I needed it in github action"
+)  # should be kept secret
+JWT_REFRESH_SECRET_KEY = os.environ.get(
+    "JWT_REFRESH_SECRET_KEY",
+    "a not secure secret key because I needed it in github action",
+)  # should be kept secret
 
 
 def create_access_token(subject: Seeker | Employer, expires_delta: int = None) -> str:
