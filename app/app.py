@@ -1,10 +1,22 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 
-from .dbmodel import Seeker, Employer, User
+from .dbmodel import Seeker, Employer, User, Job
 from peewee import IntegrityError
 from .deps import auth
-from .schemas import UserInfo, BasicUserInfo, NewUser, LoginResult, LoginInfo
+from .schemas import (
+    UserInfo,
+    BasicUserInfo,
+    NewUser,
+    LoginResult,
+    LoginInfo,
+    Jobs,
+    JobSchema,
+    PageRequest,
+    PaginationMeta,
+)
 from .utils import generate_tokens
+from datetime import datetime, timedelta
+from math import ceil
 
 app = FastAPI()
 
@@ -66,3 +78,46 @@ async def login(user: LoginInfo) -> LoginResult:
     else:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "login.no_login_info")
     return verify_pass(db.get_or_none(**filters))
+
+
+expire_check = datetime()
+
+
+async def expire_jobs():
+    global expire_check
+    if datetime.now() - expire_check > timedelta(hours=2):
+        for job in Job.select():
+            job.expire = job.expire_on <= datetime.now()
+        expire_check = datetime.now()
+
+
+@app.get("/jobs")
+async def get_jobs(page: PageRequest) -> Jobs:
+    jobs_count = Job.select(Job.expired == False).count()
+    pages_count = ceil(jobs_count / page.perPage)
+    if page.page < pages_count:
+        jobs: list[JobSchema] = []
+        for job in (
+            Job.select(Job.expired == False)
+            .order_by(Job.created_on)
+            .paginate(page.page, page.per_page)
+        ):
+            job: Job
+            jobs.append(job.to_schema(JobSchema))
+        return Jobs(
+            meta=PaginationMeta(
+                success=True,
+                total_count=jobs_count,
+                page_count=pages_count,
+                per_page=page.per_page,
+            ),
+            jobs=jobs,
+        )
+    else:
+        HTTPException(400, "jobs.bad_pagination")
+    expire_jobs()
+
+
+@app.get("/cron")
+async def cron():
+    expire_jobs()
