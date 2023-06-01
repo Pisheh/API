@@ -80,12 +80,12 @@ async def login(user: LoginInfo) -> LoginResult:
     return verify_pass(db.get_or_none(**filters))
 
 
-expire_check = datetime()
+expire_check = None
 
 
 async def expire_jobs():
     global expire_check
-    if datetime.now() - expire_check > timedelta(hours=2):
+    if not expire_check or datetime.now() - expire_check > timedelta(hours=2):
         for job in Job.select():
             job.expire = job.expire_on <= datetime.now()
         expire_check = datetime.now()
