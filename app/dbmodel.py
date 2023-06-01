@@ -7,6 +7,8 @@ from hashlib import md5
 from peewee import callable_
 from uuid import uuid4
 import datetime
+import pydantic
+from .schemas import SkillSchema, JobSchema, EmployerSchema
 
 generate_password_hash = lambda p: pbkdf2_sha256.using(rounds=8000, salt_size=10).hash(
     p
@@ -39,9 +41,40 @@ class BaseModel(Model):
     _exclude_ = None
     _include_ = None
     _backrefs_ = True
+    _max_depth_ = True
+    _schema_dict_: dict[str, pydantic.BaseModel] = dict()
+    _schema_type_: pydantic.main.ModelMetaclass = None
 
     class Meta:
         database = database_proxy
+
+    def to_schema(self, type_: pydantic.BaseModel = DEFAULT) -> _schema_type_:
+        _exclude = _clone_set(self._exclude_)
+        type_ = _default(type_, self._schema_type_)
+        data = self.to_dict(False, False, only=type_.__fields__.keys())
+        model_class = type(self)
+        for foreign_key, rel_model in self._meta.backrefs.items():
+            if foreign_key.backref == "+":
+                continue
+            descriptor = getattr(model_class, foreign_key.backref)
+            if descriptor in _exclude or foreign_key in _exclude:
+                continue
+            if foreign_key.backref not in type_.__fields__.keys():
+                continue
+
+            accum = []
+            _exclude.add(foreign_key)
+            related_query = getattr(self, foreign_key.backref)
+
+            for rel_obj in related_query:
+                accum.append(
+                    rel_obj.to_schema(
+                        type_.__fields__[foreign_key.backref].sub_fields[0].type_,
+                    )
+                )
+
+            data[foreign_key.backref] = accum
+        return self._schema_type_(**data)
 
     def to_dict(
         self,
@@ -52,7 +85,7 @@ class BaseModel(Model):
         seen=None,
         extra_attrs=DEFAULT,
         fields_from_query=None,
-        max_depth=None,
+        max_depth=DEFAULT,
         manytomany=False,
     ):
         """
@@ -75,9 +108,9 @@ class BaseModel(Model):
         _backrefs = _default(backrefs, self._backrefs_)
         _extra_attrs = _clone_set(_default(extra_attrs, self._include_))
         _exclude = _default(exclude, self._exclude_)
-
-        max_depth = -1 if max_depth is None else max_depth
-        if max_depth == 0:
+        _max_depth = _default(max_depth, self._max_depth_)
+        _max_depth = -1 if _max_depth is None else _max_depth
+        if _max_depth == 0:
             _recurse = False
 
         only = _clone_set(only)
@@ -113,7 +146,7 @@ class BaseModel(Model):
                             backrefs=backrefs,
                             only=only,
                             exclude=exclude,
-                            max_depth=max_depth - 1,
+                            max_depth=_max_depth - 1,
                         )
                     )
                 data[name] = accum
@@ -133,7 +166,7 @@ class BaseModel(Model):
                         only=only,
                         exclude=exclude,
                         seen=seen,
-                        max_depth=max_depth - 1,
+                        max_depth=_max_depth - 1,
                     )
                 else:
                     field_data = None
@@ -169,7 +202,7 @@ class BaseModel(Model):
                             backrefs=backrefs,
                             only=only,
                             exclude=exclude,
-                            max_depth=max_depth - 1,
+                            max_depth=_max_depth - 1,
                         )
                     )
 
@@ -180,6 +213,7 @@ class BaseModel(Model):
 
 class Skill(BaseModel):
     _backrefs_ = False  # exclude exams, seekers and jobs
+    _schema_type_ = SkillSchema
 
     title = CharField()
     desc = CharField(null=True)
@@ -217,10 +251,9 @@ class Answer(BaseModel):
 
 
 class User(BaseModel):
-    _exclude_ = ["pass_hash", "job_requests"]
+    _exclude_ = ["pass_hash", "job_requests", "phone_number", "email"]
     id = UUIDField(primary_key=True, default=uuid4)
-    firstname = CharField(null=True)
-    lastname = CharField(null=True)
+    avatar = BigBitField()
     email = FixedCharField(64, index=True)
     phone_number = FixedCharField(9, index=True)
     pass_hash = CharField()
@@ -238,6 +271,8 @@ class User(BaseModel):
 
 
 class Employer(User):
+    _exclude_ = ["co_address", "co_phones", "co_ver_code"]
+    _schema_type_ = EmployerSchema
     co_name = TextField(null=True)
     co_address = TextField(null=True)
     co_phones = TextField(null=True)
@@ -246,6 +281,8 @@ class Employer(User):
 
 
 class Seeker(User):
+    firstname = CharField(null=True)
+    lastname = CharField(null=True)
     cv_content = TextField(null=True)
     # skills
 
@@ -257,7 +294,10 @@ class SkillSeeker(BaseModel):
 
 
 class Job(BaseModel):
-    _exclude_ = ["requests"]
+    _exclude_ = ["requests", "expire_on", "expired", "requests"]
+    _max_depth_ = 1
+    _schema_type_ = JobSchema
+
     title = TextField()
     content = TextField()
     min_salary = IntegerField()
