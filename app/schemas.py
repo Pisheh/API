@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator, PositiveInt
+from pydantic.fields import ModelField
 from typing import Literal
 from uuid import UUID
-from datetime import timedelta
+from datetime import timedelta, datetime
 import re
 
 __phone_num_re = re.compile(r"^09(\d{9})$")
@@ -34,6 +35,24 @@ class PhoneNumber(str):
         return f"PhoneNumber({super().__repr__()})"
 
 
+class UserSchema(BaseModel):
+    id: UUID
+    avatar: str
+    email = EmailStr
+    phone_number = PhoneNumber
+
+
+class EmployerSummary(UserSchema):
+    id: UUID
+    co_name: str
+
+
+class EmployerSchema(UserSchema):
+    id: UUID
+    co_name: str
+    jobs: list["JobSchema"]
+
+
 class UserInfo(BaseModel):
     email: EmailStr | None
     number: PhoneNumber | None
@@ -44,6 +63,12 @@ class LoginInfo(BaseModel):
     number: PhoneNumber | None
     password: str
     role: Role
+
+
+class SkillSchema(BaseModel):
+    id: int
+    title: str
+    desc: str | None
 
 
 class BasicUserInfo(BaseModel):
@@ -69,3 +94,40 @@ class NewUser(BaseModel):
 class LoginResult(BaseModel):
     token: str
     refresh_token: str
+
+
+class JobSchema(BaseModel):
+    id: int
+    title: str
+    content: str
+    min_salary: int
+    max_salary: int
+    created_on: datetime
+    employer: EmployerSummary
+    skills: list[SkillSchema]
+
+
+class PaginationMeta(BaseModel):
+    total_count: int
+    page_count: int
+    current_page: int
+    per_page: PositiveInt
+
+
+class Jobs(BaseModel):
+    meta: PaginationMeta
+    jobs: list[JobSchema]
+
+
+class PageRequest(BaseModel):
+    page: PositiveInt | None = 1
+    per_page: PositiveInt | None = 30
+
+    @validator("per_page")
+    def per_page_limit(cls, v):
+        assert v <= 100, "perPage out of limitation"
+        return v
+
+    @validator("page")
+    def page_limit(cls, v):
+        assert v
