@@ -48,33 +48,20 @@ class BaseModel(Model):
     class Meta:
         database = database_proxy
 
-    def to_schema(self, type_: pydantic.BaseModel = DEFAULT) -> _schema_type_:
-        _exclude = _clone_set(self._exclude_)
-        type_ = _default(type_, self._schema_type_)
-        data = self.to_dict(False, False, only=type_.__fields__.keys())
-        model_class = type(self)
-        for foreign_key, rel_model in self._meta.backrefs.items():
-            if foreign_key.backref == "+":
-                continue
-            descriptor = getattr(model_class, foreign_key.backref)
-            if descriptor in _exclude or foreign_key in _exclude:
-                continue
-            if foreign_key.backref not in type_.__fields__.keys():
-                continue
-
-            accum = []
-            _exclude.add(foreign_key)
-            related_query = getattr(self, foreign_key.backref)
-
-            for rel_obj in related_query:
-                accum.append(
-                    rel_obj.to_schema(
-                        type_.__fields__[foreign_key.backref].sub_fields[0].type_,
-                    )
-                )
-
-            data[foreign_key.backref] = accum
-        return self._schema_type_(**data)
+    def to_schema(self, type_: pydantic.BaseModel = DEFAULT) -> pydantic.BaseModel:
+        data = {}
+        for name, field in type_.__fields__.items():
+            value = getattr(self, name)
+            value_type = type(value)
+            if isinstance(value, BaseModel):
+                value = value.to_schema(field.type_)
+            if name in self._meta.manytomany or name in self._meta.backrefs:
+                l = []
+                for v in value:
+                    l.append(v.to_schema(field.sub_fields[0].type_))
+                value = l
+            data[name] = value
+        return type_(**data)
 
     def to_dict(
         self,
@@ -114,7 +101,12 @@ class BaseModel(Model):
             _recurse = False
 
         only = _clone_set(only)
-        should_skip = lambda n: (n in _exclude) or (only and (n not in only))
+
+        should_skip = (
+            lambda n: (n in _exclude)
+            or (getattr(n, "name", None) and n.name in _exclude)
+            or (getattr(n, "name", None) and n.name not in only)
+        )
 
         if fields_from_query is not None:
             for item in fields_from_query._returning:
@@ -147,9 +139,12 @@ class BaseModel(Model):
                             only=only,
                             exclude=exclude,
                             max_depth=_max_depth - 1,
+                            manytomany=False,
                         )
                     )
                 data[name] = accum
+        else:
+            _exclude.update(self._meta.manytomany.keys())
 
         for field in self._meta.sorted_fields:
             if should_skip(field):
@@ -183,6 +178,8 @@ class BaseModel(Model):
 
         if _backrefs and _recurse:
             for foreign_key, rel_model in self._meta.backrefs.items():
+                if should_skip(foreign_key.backref):
+                    continue
                 if foreign_key.backref == "+":
                     continue
                 descriptor = getattr(model_class, foreign_key.backref)
@@ -251,9 +248,18 @@ class Answer(BaseModel):
 
 
 class User(BaseModel):
-    _exclude_ = ["pass_hash", "job_requests", "phone_number", "email"]
-    id = UUIDField(primary_key=True, default=uuid4)
-    avatar = BigBitField(null=True)
+    _exclude_ = [
+        "id",
+        "pass_hash",
+        "job_requests",
+        "phone_number",
+        "email",
+        "co_address",
+        "co_phones",
+        "co_ver_code",
+    ]
+    uuid = FixedCharField(32, index=True, default=uuid4)
+    avatar = CharField(null=True)
     email = FixedCharField(64, index=True)
     phone_number = FixedCharField(9, index=True)
     pass_hash = CharField()
@@ -271,7 +277,6 @@ class User(BaseModel):
 
 
 class Employer(User):
-    _exclude_ = ["co_address", "co_phones", "co_ver_code"]
     _schema_type_ = EmployerSchema
     co_name = TextField(null=True)
     co_address = TextField(null=True)
@@ -308,14 +313,6 @@ class Job(BaseModel):
     employer = ForeignKeyField(Employer, backref="jobs")
     skills = ManyToManyField(Skill, backref="jobs")
     # requests
-
-    @classmethod
-    def get(cls, *query, **filters):
-        res = super().get(*query, **filters)
-        if res.expire_on <= datetime.datetime.now():
-            res.expired = True
-
-        return res
 
 
 JobSkill = Job.skills.get_through_model()

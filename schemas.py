@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator, PositiveInt
+from pydantic import BaseModel, EmailStr, validator, PositiveInt, Field
 from pydantic.fields import ModelField
 from typing import Literal
 from uuid import UUID
@@ -36,19 +36,17 @@ class PhoneNumber(str):
 
 
 class UserSchema(BaseModel):
-    id: UUID
-    avatar: str
+    uuid: str
+    avatar: str | None
     email = EmailStr
     phone_number = PhoneNumber
 
 
 class EmployerSummary(UserSchema):
-    id: UUID
     co_name: str
 
 
 class EmployerSchema(UserSchema):
-    id: UUID
     co_name: str
     jobs: list["JobSchema"]
 
@@ -66,7 +64,7 @@ class LoginInfo(BaseModel):
 
 
 class SkillSchema(BaseModel):
-    id: int
+    id: int = Field(ge=1)
     title: str
     desc: str | None
 
@@ -78,7 +76,7 @@ class BasicUserInfo(BaseModel):
 
 class TokenPayload(BaseModel):
     exp: timedelta
-    id: UUID
+    id: str
     role: Role
 
 
@@ -97,7 +95,7 @@ class LoginResult(BaseModel):
 
 
 class JobSchema(BaseModel):
-    id: int
+    id: int = Field(ge=1)
     title: str
     content: str
     min_salary: int
@@ -108,9 +106,9 @@ class JobSchema(BaseModel):
 
 
 class PaginationMeta(BaseModel):
-    total_count: int
-    page_count: int
-    current_page: int
+    total_count: PositiveInt
+    page_count: PositiveInt
+    current_page: PositiveInt
     per_page: PositiveInt
 
 

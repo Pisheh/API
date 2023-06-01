@@ -1,7 +1,17 @@
 import pytest
-from peewee import Database
-from app.dbmodel import *
-from random import randint
+from peewee import Database, ManyToManyField
+from dbmodel import *
+from random import randint, choices
+from datetime import timedelta
+from datetime import datetime
+from os.path import exists
+from os import remove
+
+
+@pytest.fixture(scope="session", autouse=True)
+def rm_db():
+    if exists(".testdb.sqlite"):
+        remove(".testdb.sqlite")
 
 
 @pytest.fixture()
@@ -16,16 +26,26 @@ def db():
 
 class TestAddData:
     @pytest.fixture(autouse=True)
-    def _connect_to_db(self, db):
+    def db_(self, db):
         self.db = db
 
+    @pytest.mark.order("first")
     def test_add_skills(self):
-        skills = [{"title": "python"}, {"title": "php"}, {"title": "react"}]
+        skills = [
+            {"title": "python"},
+            {"title": "php"},
+            {"title": "react"},
+            {"title": "مکانیک"},
+            {"title": ".net"},
+            {"title": "ASP"},
+        ]
 
         for skill in skills:
-            skill = Skill.create(**skill)
-            skill.save()
+            skill = Skill(**skill)
+            res = skill.save()
+            assert res, f"skill.save() returned {res}"
 
+    @pytest.mark.order("second")
     def test_add_exams(self):
         exams = [
             {"title": f"exam {n}", "skill": s} for n in range(3) for s in range(1, 4)
@@ -42,17 +62,18 @@ class TestAddData:
         ]
 
         for exam in exams:
-            exam = Exam.create(**exam)
+            exam = Exam(**exam)
             exam.save()
 
         for question in questions:
-            q = Question.create(**question)
+            q = Question(**question)
             q.save()
 
         for answer in answers:
-            ans = Answer.create(**answer)
+            ans = Answer(**answer)
             ans.save()
 
+    @pytest.mark.order(3)
     def test_add_employer(self):
         employers = [
             dict(
@@ -70,12 +91,191 @@ class TestAddData:
         ]
 
         for employer in employers:
-            Employer.create(**employer).save()
+            res = Employer(**employer).save()
+            assert res, f"Employer.save() returned {res}"
 
-    # def test_add_job(self):
-    #     jobs = [
-    #         dict(
-    #             title = "برنامه نویس پایتون",
-    #             content =
-    #         )
-    #     ]
+    @pytest.mark.order(4)
+    def test_add_job(self):
+        jobs = [
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+            dict(
+                title="برنامه نویس سمت سرور",
+                content="به یک برنامه نویس برای بک‌اند نیاز داریم",
+                expire_on=datetime.now() + timedelta(minutes=45),
+                employer=randint(1, 2),
+                min_salary=randint(10, 30) * 100_000,
+                max_salary=randint(30, 70) * 100_000,
+            ),
+        ]
+        for job in jobs:
+            j = Job.create(**job)
+            for i in set(choices((range(1, 7)), k=randint(1, 6))):
+                j.skills.add(Skill.get_by_id(i))
+            j.save()
