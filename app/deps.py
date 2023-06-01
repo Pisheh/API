@@ -12,7 +12,7 @@ from .schemas import TokenPayload
 reuseable_oauth = OAuth2PasswordBearer(tokenUrl="/login", scheme_name="JWT")
 
 
-def auth(role: Literal["seeker", "employer"]):
+def auth(role: Literal["seeker", "employer", "*"]):
     async def get_current_user(token: str = Depends(reuseable_oauth)) -> Employer:
         try:
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
@@ -31,9 +31,9 @@ def auth(role: Literal["seeker", "employer"]):
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        if token_data.role == "employer" and role == "employer":
+        if token_data.role == "employer" and role == "employer" or role == "*":
             user: Employer | None = Employer.get_or_none(id=token_data.id)
-        elif token_data.role == "seeker" and role == "seeker":
+        elif token_data.role == "seeker" and role == "seeker" or role == "*":
             user: Seeker | None = Seeker.get_or_none(id=token_data.id)
         else:
             raise HTTPException(
