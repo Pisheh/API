@@ -14,7 +14,7 @@ from schemas import (
     PageRequest,
     PaginationMeta,
 )
-from .utils import generate_tokens
+from utils import generate_tokens
 from datetime import datetime, timedelta
 from math import ceil
 
