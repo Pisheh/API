@@ -253,7 +253,7 @@ class Answer(BaseModel):
 class User(BaseModel):
     _exclude_ = ["pass_hash", "job_requests", "phone_number", "email"]
     id = UUIDField(primary_key=True, default=uuid4)
-    avatar = BigBitField()
+    avatar = BigBitField(null=True)
     email = FixedCharField(64, index=True)
     phone_number = FixedCharField(9, index=True)
     pass_hash = CharField()
