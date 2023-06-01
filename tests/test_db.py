@@ -1,6 +1,6 @@
 import pytest
 from peewee import Database
-from dbmodel import *
+from app.dbmodel import *
 from random import randint
 
 
@@ -53,5 +53,29 @@ class TestAddData:
             ans = Answer.create(**answer)
             ans.save()
 
-    def test_get_exams(self):
-        ...
+    def test_add_employer(self):
+        employers = [
+            dict(
+                email="example.example.com",
+                phone_number="09123456789",
+                pass_hash=User.hash_password("password1"),
+                co_name="BSimjoo",
+            ),
+            dict(
+                email="example2.example.com",
+                phone_number="09987654321",
+                pass_hash=User.hash_password("password2"),
+                co_name="sepehr",
+            ),
+        ]
+
+        for employer in employers:
+            Employer.create(**employer).save()
+
+    # def test_add_job(self):
+    #     jobs = [
+    #         dict(
+    #             title = "برنامه نویس پایتون",
+    #             content =
+    #         )
+    #     ]

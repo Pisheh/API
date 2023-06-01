@@ -8,7 +8,7 @@ from peewee import callable_
 from uuid import uuid4
 import datetime
 import pydantic
-from .schemas import SkillSchema, JobSchema, EmployerSchema
+from schemas import SkillSchema, JobSchema, EmployerSchema
 
 generate_password_hash = lambda p: pbkdf2_sha256.using(rounds=8000, salt_size=10).hash(
     p

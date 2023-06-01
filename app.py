@@ -1,9 +1,9 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 
-from .dbmodel import Seeker, Employer, User, Job
+from dbmodel import Seeker, Employer, User, Job
 from peewee import IntegrityError
-from .deps import auth
-from .schemas import (
+from deps import auth
+from schemas import (
     UserInfo,
     BasicUserInfo,
     NewUser,
