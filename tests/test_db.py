@@ -122,7 +122,7 @@ class TestAddData:
 
         cities = ["بندرعباس", "تهران", "اصفهان", "یزد"]
 
-        for i in range(123):
+        for i in range(12345):
             title, content = choice(jobs)
 
             j = Job.create(
