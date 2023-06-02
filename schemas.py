@@ -51,7 +51,7 @@ class EmployerSchema(UserSchema):
     jobs: list["JobSchema"]
 
 
-class UserInfo(BaseModel):
+class AuthenticationInfo(BaseModel):
     email: EmailStr | None
     number: PhoneNumber | None
 
@@ -69,7 +69,7 @@ class SkillSchema(BaseModel):
     desc: str | None
 
 
-class BasicUserInfo(BaseModel):
+class AuthenticationResponse(BaseModel):
     firstname: str
     role: Role
 
