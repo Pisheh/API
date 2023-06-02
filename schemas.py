@@ -70,7 +70,8 @@ class SkillSchema(BaseModel):
 
 
 class AuthenticationResponse(BaseModel):
-    firstname: str
+    firstname: str | None
+    co_name: str | None
     role: Role
 
 

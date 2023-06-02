@@ -37,17 +37,17 @@ async def shutdown():
 @app.post("/user")
 async def get_user(user: AuthenticationInfo) -> AuthenticationResponse:
     if user.email:
-        if seeker := Seeker.get_or_none(email=user.email) is not None:
+        if (seeker := Seeker.get_or_none(email=user.email)) is not None:
             return AuthenticationResponse(firstname=seeker.firstname, role="seeker")
-        elif employer := Employer.get_or_none(email=user.email) is not None:
-            return AuthenticationResponse(firstname=employer.firstname, role="employer")
+        elif (employer := Employer.get_or_none(email=user.email)) is not None:
+            return AuthenticationResponse(co_name=employer.co_name, role="employer")
         else:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "user.notfound")
     elif user.number:
-        if seeker := Seeker.get_or_none(phone_number=user.number) is not None:
+        if (seeker := Seeker.get_or_none(phone_number=user.number)) is not None:
             return AuthenticationResponse(firstname=seeker.firstname, role="seeker")
-        elif employer := Employer.get_or_none(phone_number=user.number) is not None:
-            return AuthenticationResponse(firstname=employer.firstname, role="employer")
+        elif (employer := Employer.get_or_none(phone_number=user.number)) is not None:
+            return AuthenticationResponse(co_name=employer.co_name, role="employer")
         else:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "user.notfound")
 
