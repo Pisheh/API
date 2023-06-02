@@ -108,7 +108,7 @@ async def expire_jobs():
 async def get_jobs(page: PageRequest) -> Jobs:
     jobs_count = Job.select(Job.expired == False).count()
     pages_count = ceil(jobs_count / page.per_page)
-    if page.page < pages_count:
+    if page.page <= pages_count:
         jobs: list[JobSchema] = []
         for job in (
             Job.select()
