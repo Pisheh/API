@@ -4,8 +4,8 @@ from dbmodel import Seeker, Employer, User, Job
 from peewee import IntegrityError
 from deps import auth
 from schemas import (
-    UserInfo,
-    BasicUserInfo,
+    AuthenticationInfo,
+    AuthenticationResponse,
     NewUser,
     LoginResult,
     LoginInfo,
@@ -21,25 +21,25 @@ from math import ceil
 app = FastAPI()
 
 
-@app.get("/user")
-async def get_user(user: UserInfo) -> BasicUserInfo:
+@app.post("/user")
+async def get_user(user: AuthenticationInfo) -> AuthenticationResponse:
     if user.email:
         if seeker := Seeker.get_or_none(email=user.email) is not None:
-            return BasicUserInfo(firstname=seeker.firstname, role="seeker")
+            return AuthenticationResponse(firstname=seeker.firstname, role="seeker")
         elif employer := Employer.get_or_none(email=user.email) is not None:
-            return BasicUserInfo(firstname=employer.firstname, role="employer")
+            return AuthenticationResponse(firstname=employer.firstname, role="employer")
         else:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "user.notfound")
     elif user.number:
         if seeker := Seeker.get_or_none(phone_number=user.number) is not None:
-            return BasicUserInfo(firstname=seeker.firstname, role="seeker")
+            return AuthenticationResponse(firstname=seeker.firstname, role="seeker")
         elif employer := Employer.get_or_none(phone_number=user.number) is not None:
-            return BasicUserInfo(firstname=employer.firstname, role="employer")
+            return AuthenticationResponse(firstname=employer.firstname, role="employer")
         else:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "user.notfound")
 
 
-@app.post("/user")
+@app.post("/signup")
 async def signup(user: NewUser):
     try:
         if user.role == "seeker":
@@ -91,7 +91,7 @@ async def expire_jobs():
         expire_check = datetime.now()
 
 
-@app.get("/jobs")
+@app.post("/jobs/page")
 async def get_jobs(page: PageRequest) -> Jobs:
     jobs_count = Job.select(Job.expired == False).count()
     pages_count = ceil(jobs_count / page.perPage)
