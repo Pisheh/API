@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import FastAPI, HTTPException, status, Depends, Path
 import uvicorn
 from peewee import SqliteDatabase
 from dbmodel import Seeker, Employer, User, Job, database_proxy
@@ -18,6 +18,7 @@ from schemas import (
 from utils import generate_tokens
 from datetime import datetime, timedelta
 from math import ceil
+from typing import Annotated
 
 app = FastAPI()
 db_ = SqliteDatabase(".testdb.sqlite")
@@ -129,7 +130,15 @@ async def get_jobs(page: PageRequest) -> Jobs:
         )
     else:
         HTTPException(400, "jobs.bad_pagination")
-    expire_jobs()
+
+
+@app.get("/jobs/{job_id}")
+async def get_jobs(
+    job_id: Annotated[int, Path(title="The ID of the job to get", ge=1)]
+) -> JobSchema:
+    if (job := Job.get_or_none(job_id)) is not None and not job.expired:
+        return job.to_schema(JobSchema)
+    raise HTTPException(status.HTTP_404_NOT_FOUND, "job.not_found")
 
 
 @app.get("/cron")
