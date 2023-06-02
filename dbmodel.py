@@ -5,10 +5,12 @@ from enum import Enum
 from typing import Any, Sequence
 from hashlib import md5
 from peewee import callable_
-from uuid import uuid4
+from uuid import uuid1
 import datetime
+from datetime import timedelta
 import pydantic
 from schemas import SkillSchema, JobSchema, EmployerSchema
+from typing import Literal
 
 generate_password_hash = lambda p: pbkdf2_sha256.using(rounds=8000, salt_size=10).hash(
     p
@@ -258,7 +260,7 @@ class User(BaseModel):
         "co_phones",
         "co_ver_code",
     ]
-    uuid = FixedCharField(32, index=True, default=uuid4)
+    uuid = FixedCharField(36, index=True, default=uuid1, unique=True)
     avatar = CharField(null=True)
     email = FixedCharField(64, index=True)
     phone_number = FixedCharField(9, index=True)
@@ -302,6 +304,7 @@ class Job(BaseModel):
     _exclude_ = ["requests", "expire_on", "expired", "requests"]
     _max_depth_ = 1
 
+    city = FixedCharField("30")
     title = TextField()
     content = TextField()
     min_salary = IntegerField()
@@ -312,6 +315,39 @@ class Job(BaseModel):
     employer = ForeignKeyField(Employer, backref="jobs")
     skills = ManyToManyField(Skill, backref="jobs")
     # requests
+
+    @property
+    def timedelta(self):
+        delta: timedelta = datetime.datetime.now() - self.created_on
+        unit = "مدت‌ها پیش"
+        amount = 0
+        if delta.days < 1:
+            if delta.seconds < 10 * 60:
+                unit = "به تازگی"
+            elif delta.seconds // 60 < 25:
+                unit = "دقایقی پیش"
+            elif delta.seconds // 60 < 35:
+                unit = "نیم‌ساعت پیش"
+            elif delta.seconds // 60 < 60:
+                unit = "دقیقه پیش"
+                amount = delta.seconds // 60
+            elif delta.seconds // 3600 < 10:
+                unit = "ساعت پیش"
+                amount = delta.seconds // 3600
+            elif delta.seconds // 3600 < 24:
+                unit = "امروز"
+        if delta.days == 1:
+            unit = "دیروز"
+        elif 1 < delta.days < 7:
+            unit = "روز قبل"
+            amount = delta.days
+        elif 1 <= delta.days < 30:
+            unit = "هفته قبل"
+            amount = delta.days // 7
+        elif 1 <= delta.days // 30 < 12:
+            unit = "ماه پیش"
+            amount = delta.days // 30
+        return dict(unit=unit, amount=amount)
 
 
 JobSkill = Job.skills.get_through_model()

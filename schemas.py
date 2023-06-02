@@ -95,6 +95,23 @@ class LoginResult(BaseModel):
     refresh_token: str
 
 
+class TimeDelta(BaseModel):
+    unit: Literal[
+        "مدت‌ها پیش",
+        "به تازگی",
+        "دقایقی پیش",
+        "نیم‌ساعت پیش",
+        "دقیقه پیش",
+        "ساعت پیش",
+        "امروز",
+        "دیروز",
+        "روز قبل",
+        "هفته قبل",
+        "ماه پیش",
+    ]
+    amount: int = Field(ge=0)
+
+
 class JobSchema(BaseModel):
     id: int = Field(ge=1)
     title: str
@@ -103,7 +120,9 @@ class JobSchema(BaseModel):
     max_salary: int
     created_on: datetime
     employer: EmployerSummary
+    city: str
     skills: list[SkillSchema]
+    timedelta: TimeDelta
 
 
 class PaginationMeta(BaseModel):
