@@ -301,7 +301,6 @@ class SkillSeeker(BaseModel):
 class Job(BaseModel):
     _exclude_ = ["requests", "expire_on", "expired", "requests"]
     _max_depth_ = 1
-    _schema_type_ = JobSchema
 
     title = TextField()
     content = TextField()

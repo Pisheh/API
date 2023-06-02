@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, status, Depends
-
-from dbmodel import Seeker, Employer, User, Job
+import uvicorn
+from peewee import SqliteDatabase
+from dbmodel import Seeker, Employer, User, Job, database_proxy
 from peewee import IntegrityError
 from deps import auth
 from schemas import (
@@ -19,6 +20,18 @@ from datetime import datetime, timedelta
 from math import ceil
 
 app = FastAPI()
+db_ = SqliteDatabase(".testdb.sqlite")
+database_proxy.initialize(db_)
+
+
+@app.on_event("startup")
+async def startup():
+    db_.connect()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    db_.close()
 
 
 @app.post("/user")
@@ -94,20 +107,21 @@ async def expire_jobs():
 @app.post("/jobs/page")
 async def get_jobs(page: PageRequest) -> Jobs:
     jobs_count = Job.select(Job.expired == False).count()
-    pages_count = ceil(jobs_count / page.perPage)
+    pages_count = ceil(jobs_count / page.per_page)
     if page.page < pages_count:
         jobs: list[JobSchema] = []
         for job in (
-            Job.select(Job.expired == False)
-            .order_by(Job.created_on)
+            Job.select()
+            .where(Job.expired == False)
+            .order_by(+Job.created_on)
             .paginate(page.page, page.per_page)
         ):
-            job: Job
             jobs.append(job.to_schema(JobSchema))
         return Jobs(
             meta=PaginationMeta(
                 success=True,
                 total_count=jobs_count,
+                current_page=page.page,
                 page_count=pages_count,
                 per_page=page.per_page,
             ),
@@ -121,3 +135,7 @@ async def get_jobs(page: PageRequest) -> Jobs:
 @app.get("/cron")
 async def cron():
     expire_jobs()
+
+
+if __name__ == "__main__":
+    uvicorn.run(app)

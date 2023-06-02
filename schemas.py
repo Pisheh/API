@@ -118,8 +118,8 @@ class Jobs(BaseModel):
 
 
 class PageRequest(BaseModel):
-    page: PositiveInt | None = 1
-    per_page: PositiveInt | None = 30
+    page: PositiveInt = 1
+    per_page: PositiveInt = 30
 
     @validator("per_page")
     def per_page_limit(cls, v):
@@ -128,4 +128,5 @@ class PageRequest(BaseModel):
 
     @validator("page")
     def page_limit(cls, v):
-        assert v
+        assert v >= 1
+        return v
