@@ -133,7 +133,11 @@ class TestAddData:
                 expire_on=datetime(2025, 2, 3),
                 created_on=datetime.now()
                 - timedelta(
-                    i // randint(0, 10), i * (10, 30, 60, 120, 600, 3600)[i % 6]
+                    i
+                    * (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)[
+                        randint(0, 10)
+                    ],
+                    i * (10, 30, 60, 120, 600, 3600)[i % 6],
                 ),
                 employer=randint(1, 2),
                 min_salary=randint(10, 30) * 100_000,
