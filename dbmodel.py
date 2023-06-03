@@ -284,6 +284,7 @@ class Employer(User):
     co_address = TextField(null=True)
     co_phones = TextField(null=True)
     co_ver_code = TextField(null=True)
+    city = FixedCharField("30")
     # jobs
 
 
@@ -303,10 +304,9 @@ class SkillSeeker(BaseModel):
 class Job(BaseModel):
     _exclude_ = ["requests", "expire_on", "expired", "requests"]
     _max_depth_ = 1
-
-    city = FixedCharField("30")
-    title = TextField()
-    content = TextField()
+    title = CharField()
+    description = TextField()
+    requirements = CharField()
     min_salary = IntegerField()
     max_salary = IntegerField()
     created_on = DateTimeField(default=datetime.datetime.now)
@@ -315,6 +315,10 @@ class Job(BaseModel):
     employer = ForeignKeyField(Employer, backref="jobs")
     skills = ManyToManyField(Skill, backref="jobs")
     # requests
+
+    @property
+    def requirements_list(self) -> list[str]:
+        return str(self.requirements).split(";")
 
     @property
     def salary(self) -> dict[str:int] | None:
