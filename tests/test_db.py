@@ -129,9 +129,10 @@ class TestAddData:
                 title=title,
                 city=choice(cities),
                 content=content,
+                agreed_price=choice((True, False)),
                 expire_on=datetime(2025, 2, 3),
                 created_on=datetime.now()
-                + timedelta(randint(0, 234), randint(1, 3600)),
+                - timedelta(randint(0, 234), randint(1, 3600)),
                 employer=randint(1, 2),
                 min_salary=randint(10, 30) * 100_000,
                 max_salary=randint(30, 70) * 100_000,

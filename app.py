@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status, Depends, Path
+from fastapi import FastAPI, HTTPException, status, Request, Path
 import uvicorn
 from peewee import SqliteDatabase
 from dbmodel import Seeker, Employer, User, Job, database_proxy
@@ -33,6 +33,16 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     db_.close()
+
+
+async def cron_jobs():
+    expire_jobs()
+
+
+@app.middleware("http")
+async def do_cron(request: Request, call_next):
+    cron_jobs()
+    return await call_next(request)
 
 
 @app.post("/user")
@@ -143,7 +153,7 @@ async def get_jobs(
 
 @app.get("/cron")
 async def cron():
-    expire_jobs()
+    cron_jobs()
 
 
 if __name__ == "__main__":
