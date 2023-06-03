@@ -124,7 +124,11 @@ class TestAddData:
 
         for i in range(12345):
             title, content = choice(jobs)
-
+            min_salary, max_salary = choices(
+                ((0, 0), (randint(10, 30) * 100_000, randint(30, 70) * 100_000)),
+                (3, 7),
+                k=1,
+            )[0]
             j = Job.create(
                 title=title,
                 city=choice(cities),
@@ -133,15 +137,12 @@ class TestAddData:
                 expire_on=datetime(2025, 2, 3),
                 created_on=datetime.now()
                 - timedelta(
-                    i
-                    * (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)[
-                        randint(0, 10)
-                    ],
+                    i * choice((0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)),
                     i * (10, 30, 60, 120, 600, 3600)[i % 6],
                 ),
-                employer=randint(1, 2),
-                min_salary=randint(10, 30) * 100_000,
-                max_salary=randint(30, 70) * 100_000,
+                employer=choice((1, 2)),
+                min_salary=min_salary,
+                max_salary=max_salary,
             )
             for i in set(choices(range(1, 7), k=randint(1, 6))):
                 j.skills.add(Skill.get_by_id(i))
