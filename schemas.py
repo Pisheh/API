@@ -44,10 +44,12 @@ class UserSchema(BaseModel):
 
 class EmployerSummary(UserSchema):
     co_name: str
+    city: str
 
 
 class EmployerSchema(UserSchema):
     co_name: str
+    city: str
     jobs: list["JobSchema"]
 
 
@@ -120,11 +122,11 @@ class Salary(BaseModel):
 class JobSchema(BaseModel):
     id: int = Field(ge=1)
     title: str
-    content: str
+    description: str
     salary: Salary | None
     created_on: datetime
     employer: EmployerSummary
-    city: str
+    requirements_list: list[str]
     skills: list[SkillSchema]
     timedelta: TimeDelta
 
