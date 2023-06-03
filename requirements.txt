@@ -3,6 +3,7 @@ jose==1.0.0
 passlib==1.7.4
 peewee==3.15.2
 pydantic==1.10.8
-pydantic[email]
+pytest==7.3.1
 python_jose==3.3.0
-uvicorn
+uvicorn==0.22.0
+pydantic[email]
