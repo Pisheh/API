@@ -317,6 +317,12 @@ class Job(BaseModel):
     # requests
 
     @property
+    def salary(self) -> dict[str:int] | None:
+        if self.min_salary == 0 or self.max_salary == 0:
+            return
+        return dict(min=self.min_salary, max=self.max_salary)
+
+    @property
     def timedelta(self):
         delta: timedelta = datetime.datetime.now() - self.created_on
         unit = "مدت‌ها پیش"

@@ -112,12 +112,16 @@ class TimeDelta(BaseModel):
     amount: int = Field(ge=0)
 
 
+class Salary(BaseModel):
+    min: int
+    max: int
+
+
 class JobSchema(BaseModel):
     id: int = Field(ge=1)
     title: str
     content: str
-    min_salary: int
-    max_salary: int
+    salary: Salary | None
     created_on: datetime
     employer: EmployerSummary
     city: str
