@@ -124,7 +124,7 @@ async def get_jobs(page: PageRequest) -> Jobs:
         for job in (
             Job.select()
             .where(Job.expired == False)
-            .order_by(+Job.created_on)
+            .order_by(-Job.created_on)
             .paginate(page.page, page.per_page)
         ):
             jobs.append(job.to_schema(JobSchema))
