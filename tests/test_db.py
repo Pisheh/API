@@ -6,6 +6,7 @@ from datetime import timedelta
 from datetime import datetime
 from os.path import exists
 from os import remove
+from pprint import pprint
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -24,6 +25,152 @@ def db():
     db_.close()
 
 
+jobs = [
+    {
+        "title": "توسعه‌دهنده وب",
+        "desc": "طراحی و پیاده‌سازی وبسایت‌ها و برنامه‌های کاربردی وب",
+        "req": ["مسلط به HTML, CSS, JavaScript"],
+        "skills": ["React", "Vue", "Angular"],
+    },
+    {
+        "title": "توسعه‌دهنده نرم‌افزار",
+        "desc": "طراحی و توسعه نرم‌افزارهای رومیزی، سیستم‌های تحت شبکه و سرویس‌های وب",
+        "req": ["مسلط به زبان‌های برنامه‌نویسی مانند Java, C#, Python"],
+        "skills": ["OOP", "Design Patterns", "Database Management"],
+    },
+    {
+        "title": "کارشناس تست نرم‌افزار",
+        "desc": "بررسی و اطمینان از کیفیت و عملکرد صحیح نرم‌افزارها",
+        "req": ["آشنایی با مفاهیم تست، نیازمندی‌ها و مستندات مرتبط"],
+        "skills": ["Test Automation", "Selenium", "JUnit"],
+    },
+    {
+        "title": "طراح گرافیک",
+        "desc": "طراحی و ایجاد تصاویر و گرافیک‌های مورد نیاز در پروژه‌ها",
+        "req": ["مسلط به نرم‌افزارهای طراحی مانند Adobe Photoshop, Illustrator"],
+        "skills": ["UI/UX Design", "Typography", "Color Theory"],
+    },
+    {
+        "title": "کارشناس فروش و بازاریابی",
+        "desc": "ارائه محصولات و خدمات شرکت به مشتریان و ایجاد روابط تجاری",
+        "req": ["مهارت‌های ارتباطی بالا و توانایی مذاکره"],
+        "skills": ["CRM", "Digital Marketing", "Sales Management"],
+    },
+    {
+        "title": "تحلیل‌گر داده",
+        "desc": "بررسی داده‌ها و ارائه راهکارهای بهبود عملکرد شرکت",
+        "req": ["آشنایی با زبان‌های برنامه‌نویسی مانند Python, R"],
+        "skills": ["Data Visualization", "Machine Learning", "Statistics"],
+    },
+    {
+        "title": "مهندس شبکه",
+        "desc": "طراحی، نصب و راه‌اندازی و نگه‌داری سیستم‌های شبکه",
+        "req": ["مسلط به مفاهیم شبکه‌های کامپیوتری و تجهیزات مرتبط"],
+        "skills": ["Routing", "Switching", "Network Security"],
+    },
+    {
+        "title": "کارشناس پشتیبانی نرم‌افزار",
+        "desc": "پاسخ‌گویی به سوالات کاربران و رفع مشکلات نرم‌افزاری",
+        "req": ["آشنایی با محصولات شرکت و مهارت‌های حل مسئله"],
+        "skills": ["Customer Service", "Troubleshooting", "Technical Writing"],
+    },
+    {
+        "title": "توسعه‌دهنده برنامه‌های موبایل",
+        "desc": "طراحی و پیاده‌سازی برنامه‌های کاربردی موبایل برای سیستم‌عامل‌های مختلف",
+        "req": ["مسلط به زبان‌های برنامه‌نویسی مانند Java, Swift, Kotlin"],
+        "skills": ["Android", "iOS", "React Native"],
+    },
+    {
+        "title": "کارشناس امنیت اطلاعات",
+        "desc": "ارزیابی و بهبود امنیت سیستم‌های کامپیوتری و شبکه‌های اطلاعاتی",
+        "req": ["آشنایی با مفاهیم امنیتی و تکنیک‌های مربوطه"],
+        "skills": ["Penetration Testing", "Cryptography", "Security Policies"],
+    },
+    {
+        "title": "مدیر پروژه",
+        "desc": "برنامه‌ریزی، هدایت و کنترل تیم‌های پروژه برای تحقق اهداف مشخص‌شده",
+        "req": ["مهارت‌های مدیریتی و ارتباطی بالا"],
+        "skills": ["Agile", "Scrum", "Risk Management"],
+    },
+    {
+        "title": "معمار معلوماتی",
+        "desc": "طراحی و پیاده‌سازی ساختارهای داده و استانداردهای استفاده از آن‌ها",
+        "req": ["آشنایی با مفاهیم معماری اطلاعات و سیستم‌های پایگاه داده"],
+        "skills": ["Big Data", "Data Modeling", "Database Design"],
+    },
+    {
+        "title": "مدیر بازاریابی",
+        "desc": "برنامه‌ریزی و اجرای استراتژی‌های بازاریابی و تبلیغاتی برای یک شرکت",
+        "req": ["تجربه در حوزه بازاریابی و مدیریت تیم‌های بازاریابی"],
+        "skills": ["Marketing Strategy", "Brand Management", "Content Marketing"],
+    },
+    {
+        "title": "مدیر مالی",
+        "desc": "مسئولیت مدیریت مالی و بودجه‌بندی شرکت",
+        "req": ["تجربه در حوزه مالی و مدیریت تیم‌های مالی"],
+        "skills": ["Financial Analysis", "Budgeting", "Investment Management"],
+    },
+    {
+        "title": "مهندس الکترونیک",
+        "desc": "طراحی و ساخت مدارها و سیستم‌های الکترونیکی",
+        "req": ["مسلط به مفاهیم و تکنیک‌های مهندسی الکترونیک"],
+        "skills": ["PCB Design", "Embedded Systems", "Analog Circuit Design"],
+    },
+    {
+        "title": "مهندس مکانیک",
+        "desc": "طراحی و ساخت ماشین‌آلات و سیستم‌های مکانیکی",
+        "req": ["مسلط به مفاهیم و تکنیک‌های مهندسی مکانیک"],
+        "skills": ["CAD", "Finite Element Analysis", "Thermodynamics"],
+    },
+]
+
+employers = [
+    {"name": "شرکت رایان آسان", "city": "تهران"},
+    {"name": "شرکت نوآوران پارسیان", "city": "تهران"},
+    {"name": "شرکت هوشمند پارسیان", "city": "تهران"},
+    {"name": "شرکت آسان رایانه", "city": "تهران"},
+    {"name": "شرکت فناوری اطلاعات باران", "city": "تهران"},
+    {"name": "شرکت آواتک", "city": "تهران"},
+    {"name": "شرکت فناوری اطلاعات ایرانسل", "city": "تهران"},
+    {"name": "شرکت پارس سیستم", "city": "تهران"},
+    {"name": "شرکت آی تی شرق", "city": "تهران"},
+    {"name": "شرکت آریانتکنولوژی", "city": "تهران"},
+    {"name": "شرکت پردازشگرا", "city": "تهران"},
+    {"name": "شرکت پارس پاسارگاد", "city": "تهران"},
+    {"name": "شرکت راهبرد", "city": "تهران"},
+    {"name": "شرکت مدرن توسعه پارسیان", "city": "تهران"},
+    {"name": "شرکت پیشتازان آریا", "city": "تهران"},
+    {"name": "شرکت هوشمند سازان ایرانیان", "city": "تهران"},
+    {"name": "شرکت فناوری اطلاعات زرین", "city": "تهران"},
+    {"name": "شرکت پارتیکا", "city": "تهران"},
+    {"name": "شرکت فناوری اطلاعات و ارتباطات پیشگامان", "city": "تهران"},
+    {"name": "شرکت آی تکنولوژی آینده", "city": "تهران"},
+]
+
+cities = [
+    {"name": "تهران"},
+    {"name": "مشهد"},
+    {"name": "اصفهان"},
+    {"name": "کرج"},
+    {"name": "تبریز"},
+    {"name": "شیراز"},
+    {"name": "اهواز"},
+    {"name": "قم"},
+    {"name": "کرمانشاه"},
+    {"name": "رشت"},
+    {"name": "زاهدان"},
+    {"name": "کرمان"},
+    {"name": "ارومیه"},
+    {"name": "یزد"},
+    {"name": "سنندج"},
+    {"name": "همدان"},
+    {"name": "بندرعباس"},
+    {"name": "اردبیل"},
+    {"name": "ساری"},
+    {"name": "بجنورد"},
+]
+
+
 class TestAddData:
     @pytest.fixture(autouse=True)
     def db_(self, db):
@@ -31,119 +178,49 @@ class TestAddData:
 
     @pytest.mark.order("first")
     def test_add_skills(self):
-        skills = [
-            {"title": "python"},
-            {"title": "php"},
-            {"title": "react"},
-            {"title": "مکانیک"},
-            {"title": ".net"},
-            {"title": "ASP"},
-        ]
-
-        for skill in skills:
-            skill = Skill(**skill)
-            res = skill.save()
-            assert res, f"skill.save() returned {res}"
+        for job in jobs:
+            skills = []
+            for skill_title in job["skills"]:
+                skill, c = Skill.get_or_create(title=skill_title)
+                skills.append(skill.id)
+            job["skills"] = skills
 
     @pytest.mark.order("second")
-    def test_add_exams(self):
-        exams = [
-            {"title": f"exam {n}", "skill": s} for n in range(3) for s in range(1, 4)
-        ]
-
-        questions = [
-            {"content": f"q{q}", "exam": ex} for q in range(1, 11) for ex in range(1, 4)
-        ]
-
-        answers = [
-            {"content": f"ans {a}", "score": randint(0, 5), "question": q}
-            for a in range(1, randint(2, 6))
-            for q in range(1, 31)
-        ]
-
-        for exam in exams:
-            exam = Exam(**exam)
-            exam.save()
-
-        for question in questions:
-            q = Question(**question)
-            q.save()
-
-        for answer in answers:
-            ans = Answer(**answer)
-            ans.save()
-
-    @pytest.mark.order(3)
     def test_add_employer(self):
-        employers = [
-            dict(
-                email="example@example.com",
-                phone_number="09123456789",
-                pass_hash=User.hash_password("password1"),
-                co_name="آذر سیستم",
-            ),
-            dict(
-                email="example2@example.com",
-                phone_number="09987654321",
-                pass_hash=User.hash_password("password2"),
-                co_name="سوران",
-            ),
-            dict(
-                email="example3@example.com",
-                phone_number="09987654323",
-                pass_hash=User.hash_password("password2"),
-                co_name="سریع سیستم جنوب",
-            ),
-        ]
-
-        for employer in employers:
-            res = Employer(**employer).save()
+        for i, employer in enumerate(employers):
+            res = Employer(
+                email=f"example{i}@example.com",
+                phone_number="0912345678{i}",
+                pass_hash=User.hash_password("password{i}"),
+                co_name=employer["name"],
+                city=choice(cities)["name"],
+            ).save()
             assert res, f"Employer.save() returned {res}"
 
-    @pytest.mark.order(4)
+    @pytest.mark.order(3)
     def test_add_job(self):
-        jobs = [
-            (
-                "گرافیست",
-                "به یک گرافیست ماهر برای طراحی لوگو نیازمند هستیم، جهت کار تمام وقت",
-            ),
-            ("نقشه کش", "به یک نقسه کش نیازمندیم"),
-            (
-                "برنامه نویس بک‌اند",
-                "به یک برنامه نویس ماهر برای بک‌اند یک سایت نیازمندیم",
-            ),
-            (
-                "برنامه‌نویس فرانت",
-                "به یک برنامه‌نویس فرانت‌اند برای ساخت یک سایت کاریابی نیازمندیم",
-            ),
-            ("تدوینگر فیلم مجالس", "به یک تدیونگر ماهر و خوش سلیقه نیازمندیم"),
-            ("عکاس حرفه‌ای", "به یک عکاس حرفه‌ای جهت کار در آتلیه نیازمندیم"),
-        ]
-
-        cities = ["بندرعباس", "تهران", "اصفهان", "یزد"]
-
         for i in range(12345):
-            title, content = choice(jobs)
+            job = jobs[i % len(jobs)]
+            pprint(job)
             min_salary, max_salary = choices(
                 ((0, 0), (randint(10, 30) * 100_000, randint(30, 70) * 100_000)),
                 (3, 7),
                 k=1,
             )[0]
             j = Job.create(
-                title=title,
-                city=choice(cities),
-                content=content,
-                agreed_price=choice((True, False)),
+                title=job["title"],
+                description=job["desc"],
+                requirements=";".join(job["req"]),
                 expire_on=datetime(2025, 2, 3),
                 created_on=datetime.now()
                 - timedelta(
-                    i * choice((0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)),
+                    i * randint(0, 10) / 10,
                     i * (10, 30, 60, 120, 600, 3600)[i % 6],
                 ),
-                employer=choice((1, 2)),
+                employer=randint(1, len(employers)),
                 min_salary=min_salary,
                 max_salary=max_salary,
             )
-            for i in set(choices(range(1, 7), k=randint(1, 6))):
-                j.skills.add(Skill.get_by_id(i))
+            for skill in job["skills"]:
+                j.skills.add(Skill.get_by_id(skill))
             j.save()
