@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, status, Request, Path
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from peewee import SqliteDatabase
 from dbmodel import Seeker, Employer, User, Job, database_proxy
@@ -43,6 +44,15 @@ async def cron_jobs():
 async def do_cron(request: Request, call_next):
     cron_jobs()
     return await call_next(request)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://pisheh.local:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/user")
@@ -107,7 +117,7 @@ async def login(user: LoginInfo) -> LoginResult:
 expire_check = None
 
 
-async def expire_jobs():
+def expire_jobs():
     global expire_check
     if not expire_check or datetime.now() - expire_check > timedelta(hours=2):
         for job in Job.select():
