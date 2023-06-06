@@ -268,7 +268,7 @@ class User(BaseModel):
     # job_requests
 
     def verify_password(self, password):
-        check_password_hash(self.pass_hash, password)
+        return check_password_hash(self.pass_hash, password)
 
     def set_password(self, password):
         self.pass_hash = generate_password_hash(password)
