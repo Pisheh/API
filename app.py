@@ -115,7 +115,7 @@ async def login(user: LoginInfo) -> LoginResult:
         filters = {"number": user.number}
     else:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "login.no_login_info")
-    return verify_pass(db.get_or_none(**filters))
+    return verify_pass(db.get_or_none(**filters), user.password)
 
 
 expire_check = None
