@@ -1,5 +1,8 @@
 from fastapi import FastAPI, HTTPException, status, Request, Path
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 import uvicorn
 from peewee import SqliteDatabase
 from dbmodel import Seeker, Employer, User, Job, database_proxy
@@ -20,10 +23,36 @@ from utils import generate_tokens
 from datetime import datetime, timedelta
 from math import ceil
 from typing import Annotated
+from logging import getLogger
 
 app = FastAPI()
 db_ = SqliteDatabase(".testdb.sqlite")
 database_proxy.initialize(db_)
+
+
+logger = getLogger("API")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
+    # or logger.error(f'{exc}')
+    logger.error(f"{exc_str}\n{exc.body}")
+    content = {"message": exc_str}
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder(
+            {
+                "description": exc_str,
+                "detail": exc.errors(),
+                "request": {
+                    "method": request.method,
+                    "headers": request.headers,
+                    "body": exc.body,
+                },
+            }
+        ),
+    )
 
 
 @app.on_event("startup")
@@ -42,7 +71,6 @@ async def cron_jobs():
 
 @app.middleware("http")
 async def do_cron(request: Request, call_next):
-    cron_jobs()
     return await call_next(request)
 
 
