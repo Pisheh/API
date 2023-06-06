@@ -190,8 +190,8 @@ class TestAddData:
         for i, employer in enumerate(employers):
             res = Employer(
                 email=f"example{i}@example.com",
-                phone_number="0912345678{i}",
-                pass_hash=User.hash_password("password{i}"),
+                phone_number=f"0912345678{i}",
+                pass_hash=User.hash_password(f"password{i}"),
                 co_name=employer["name"],
                 city=choice(cities)["name"],
             ).save()
