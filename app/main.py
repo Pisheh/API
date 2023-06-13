@@ -5,10 +5,10 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import uvicorn
 from peewee import SqliteDatabase
-from dbmodel import Seeker, Employer, User, Job, database_proxy
+from .models.dbmodel import Seeker, Employer, User, Job, database_proxy
 from peewee import IntegrityError
 from deps import auth
-from schemas import (
+from .models.schemas import (
     AuthenticationInfo,
     AuthenticationResponse,
     NewUser,
