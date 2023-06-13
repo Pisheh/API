@@ -329,19 +329,3 @@ class JobRequest(BaseModel):
             res.expired = True
 
         return res
-
-
-TABLES = (
-    Exam,
-    Question,
-    Answer,
-    Skill,
-    SeekerSkill,
-    JobSkill,
-    Seeker,
-    Employer,
-    Job,
-    Personality.users.get_through_model(),
-    Personality.job_cats.get_through_model(),
-    Personality.guides.get_through_model(),
-)
