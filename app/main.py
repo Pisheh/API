@@ -3,8 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-
-import schedule
+from fastapi_utils.tasks import repeat_every
 import uvicorn
 from peewee import SqliteDatabase
 from .models.dbmodel import Job, database_proxy
@@ -76,12 +75,18 @@ expire_check = None
 
 async def expire_jobs():
     global expire_check
-    if not expire_check or datetime.now() - expire_check > timedelta(hours=2):
+    if (not expire_check) or datetime.now() - expire_check >= timedelta(hours=2):
         for job in Job.select():
             job.expire = job.expire_on <= datetime.now()
         expire_check = datetime.now()
 
 
+async def expire_job_requests():
+    ...  # TODO: expire job reauests
+
+
+@app.on_event("startup")
+@repeat_every(seconds=2 * 3600)  # 2hours
 async def cron_jobs():
     await expire_jobs()
 
