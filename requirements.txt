@@ -1,5 +1,7 @@
-fastapi==0.95.2
+fastapi==0.97.0
+fastapi_utils==0.2.1
 jose==1.0.0
+ordered_set==4.1.0
 passlib==1.7.4
 peewee==3.15.2
 pydantic==1.10.8
