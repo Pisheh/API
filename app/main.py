@@ -91,7 +91,5 @@ async def cron_jobs():
     await expire_jobs()
 
 
-schedule.every(2).hours.do(cron_jobs)
-
 if __name__ == "__main__":
     uvicorn.run(app)
