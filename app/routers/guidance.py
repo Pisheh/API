@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Path, HTTPException, status
 from app.deps import get_user_or_none
 from typing import Annotated, Literal
 from app.models.dbmodel import Seeker, Guide
-from app.models.schemas import GuideItem
+from app.models.schemas import GuideItem, GuideSchema
 from ordered_set import OrderedSet
+from peewee import IntegrityError
 
 router = APIRouter()
 
@@ -43,3 +44,13 @@ async def search2(
     branches: Annotated[None | list[str], Query()] = None,
 ) -> OrderedSet[GuideItem]:
     raise NotImplementedError  # TODO
+
+
+@router.get("/{slug}")
+async def get_guide(slug: Annotated[str, Path()]) -> GuideSchema:
+    try:
+        return Guide.get(Guide.slug == slug).to_schema(GuideSchema)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="guide.not_found"
+        )
