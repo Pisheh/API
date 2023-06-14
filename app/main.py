@@ -9,7 +9,7 @@ from peewee import SqliteDatabase, IntegrityError, DoesNotExist
 from datetime import datetime, timedelta
 from logging import getLogger
 
-from app.routers import guidance, jobs, users
+from app.routers import guidance, jobs, users, literals
 from app.models.schemas import (
     UserQuery,
     UserQueryResult,
@@ -25,6 +25,7 @@ app = FastAPI()
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(guidance.router, prefix="/guidances", tags=["Guidance"])
 app.include_router(jobs.router, prefix="/jobs", tags="Jobs")
+app.include_router(literals.router, prefix="/literals", tags=["Literals"])
 
 db_ = SqliteDatabase(".testdb.sqlite")
 database_proxy.initialize(db_)
