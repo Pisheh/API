@@ -1,21 +1,28 @@
-from fastapi import FastAPI, status, Request
+from fastapi import FastAPI, status, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi_utils.tasks import repeat_every
 import uvicorn
-from peewee import SqliteDatabase
-from .models.dbmodel import Job, database_proxy
+from peewee import SqliteDatabase, IntegrityError, DoesNotExist
 from datetime import datetime, timedelta
-from math import ceil
-from typing import Annotated
 from logging import getLogger
 
-from .routers import users, guidance, jobs
+from app.routers import guidance, jobs, users
+from app.models.schemas import (
+    UserQuery,
+    UserQueryResult,
+    UserSchema,
+    LoginInfo,
+    LoginResult,
+    SignupInfo,
+)
+from app.models.dbmodel import Seeker, Employer, User, Role, Job, database_proxy
+from app.utils import create_access_token
 
 app = FastAPI()
-app.include_router(users.router, tags=["Users"])
+app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(guidance.router, prefix="/guidances", tags=["Guidance"])
 app.include_router(jobs.router, prefix="/jobs", tags="Jobs")
 
@@ -82,13 +89,73 @@ async def expire_jobs():
 
 
 async def expire_job_requests():
-    ...  # TODO: expire job reauests
+    raise NotImplemented  # TODO: expire job reauests
 
 
 @app.on_event("startup")
 @repeat_every(seconds=2 * 3600)  # 2hours
 async def cron_jobs():
     await expire_jobs()
+
+
+@app.post("/user")
+async def get_user(user: UserQuery) -> UserQueryResult:
+    try:
+        result: User = None
+        if user.email:
+            result = User.get(User.email == user.email)
+        elif user.number:
+            result = User.get(User.number == user.number)
+        else:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "send email or phone number"
+            )
+
+        if result.disabled:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "user.disabled")
+
+        return result.to_schema(UserQueryResult)
+    except DoesNotExist:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "user.not_found")
+
+
+@app.post("/signup")
+async def signup(signup_info: SignupInfo):
+    if not (signup_info.employer or signup_info.seeker):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "SignupInfo.employer of SignupInfo.seeker missed",
+        )
+    try:
+        user = User.create(
+            pass_hash=User.hash_password(signup_info.password),
+            **signup_info.dict(exclude={"employer", "seeker", "password"}),
+        )
+        if signup_info.role == Role.Employer:
+            user.employer = Employer.create(**signup_info.employer.dict())
+        elif signup_info.role == Role.Seeker:
+            user.seeker = Seeker.create(**signup_info.seeker.dict())
+        user.save()
+    except IntegrityError:
+        raise HTTPException(status.HTTP_409_CONFLICT, "user.exists")
+
+
+@app.post("/login")
+async def login(login_info: LoginInfo) -> LoginResult:
+    try:
+        user: User
+        if login_info.email:
+            user = User.get(User.email == login_info.email)
+        elif login_info.phone_number:
+            user = User.get(User.phone_number == login_info.phone_number)
+
+        if user and user.verify_password(login_info.password):
+            return LoginResult(
+                token=create_access_token(user), user_info=user.to_schema(UserSchema)
+            )
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
+    except DoesNotExist:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "user.not_found")
 
 
 if __name__ == "__main__":

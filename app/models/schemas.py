@@ -1,13 +1,13 @@
-from pydantic import BaseModel, EmailStr, validator, PositiveInt, Field
+from pydantic import EmailStr, validator, PositiveInt, Field
+from fastapi_utils.api_model import APIModel as BaseModel
 from pydantic.fields import ModelField
 from typing import Literal
 from uuid import UUID
 from datetime import timedelta, datetime
+from .dbmodel import Role
 import re
 
 __phone_num_re = re.compile(r"^09(\d{9})$")
-
-Role = Literal["employer", "seeker"]
 
 
 class PhoneNumber(str):
@@ -28,41 +28,70 @@ class PhoneNumber(str):
             raise TypeError("string required")
         m = __phone_num_re.fullmatch(v)
         if not m:
-            raise ValueError("invalid phonenumber format")
+            raise ValueError("invalid phone number format")
         return cls(str(m[1]))
 
     def __repr__(self):
         return f"PhoneNumber({super().__repr__()})"
 
 
-class UserSchema(BaseModel):
-    uuid: str
-    avatar: str | None
-    email = EmailStr
-    phone_number = PhoneNumber
+class UserQuery(BaseModel):
+    email: EmailStr = None
+    phone_number: PhoneNumber = None
 
 
-class EmployerSummary(UserSchema):
+class LoginInfo(BaseModel):
+    email: EmailStr = None
+    phone_number: PhoneNumber
+    password: str
+
+
+class UserQueryResult(BaseModel):
+    firstname: str = None
+    lastname: str = None
+    co_name: str = None
+    role: Role
+
+
+class EmployerInfo(BaseModel):
     co_name: str
     city: str
 
 
-class EmployerSchema(UserSchema):
+class EmployerSchema(BaseModel):
     co_name: str
     city: str
     jobs: list["JobSchema"]
 
 
-class AuthenticationInfo(BaseModel):
-    email: EmailStr | None
-    number: PhoneNumber | None
+class SeekerInfo(BaseModel):
+    firstname: str
+    lastname: str
+    skills: list["SkillItem"] = None
 
 
-class LoginInfo(BaseModel):
-    email: EmailStr | None
-    number: PhoneNumber | None
+class UserSchema(BaseModel):
+    id: str
+    avatar: str = None
+    email = EmailStr
+    phone_number = PhoneNumber
+    role: Role
+    employer: EmployerInfo = None
+    seeker: SeekerInfo = None
+
+
+class SignupInfo(BaseModel):
+    email = EmailStr
+    phone_number = PhoneNumber
     password: str
     role: Role
+    employer: EmployerInfo = None
+    seeker: SeekerInfo = None
+
+
+class LoginResult(BaseModel):
+    token: str
+    user_info: UserSchema
 
 
 class Answer(BaseModel):
@@ -96,42 +125,22 @@ class CourseSchema(BaseModel):
 
 class SkillItem(BaseModel):
     slug: str
-    title: str
-    description: str | None
+    title: str = None
+    description: str = None
 
 
-class SkillItem(BaseModel):
+class SkillSchema(BaseModel):
     slug: str
     title: str
-    description: str | None
+    description: str = None
     courses: list[CourseSchema]
     exams: list[ExamInfo]
 
 
-class AuthenticationResponse(BaseModel):
-    firstname: str | None
-    co_name: str | None
-    role: Role
-
-
-class TokenPayload(BaseModel):
+class TokenData(BaseModel):
     exp: timedelta
     id: str
-    role: Role
-
-
-class NewUser(BaseModel):
-    firstname: str
-    lastname: str
-    email: EmailStr
-    password: str
-    phone_number: PhoneNumber
-    role: Role
-
-
-class LoginResult(BaseModel):
-    token: str
-    refresh_token: str
+    scopes: list[str] = []
 
 
 class TimeDelta(BaseModel):
@@ -156,16 +165,22 @@ class Salary(BaseModel):
     max: int
 
 
+class JobCategoryInfo(BaseModel):
+    slug: str
+    title: str
+
+
 class JobSchema(BaseModel):
     id: int = Field(ge=1)
     title: str
     description: str
-    salary: Salary | None
+    salary: Salary = None
     created_on: datetime
-    employer: EmployerSummary
+    employer: EmployerInfo
     requirements_list: list[str]
     skills: list[SkillItem]
     timedelta: TimeDelta
+    category: JobCategoryInfo
 
 
 class PaginationMeta(BaseModel):
@@ -201,7 +216,7 @@ class GuideItem(BaseModel):
     summary: str
     branch: str
     expertise: str
-    based_on_personality: bool = False
+    recommended: bool = False
 
 
 class GuideSchema(BaseModel):
@@ -211,5 +226,5 @@ class GuideSchema(BaseModel):
     branch: str
     expertise: str
     basic: str
-    advanced: str | None
+    advanced: str = None
     skills: list[SkillItem]

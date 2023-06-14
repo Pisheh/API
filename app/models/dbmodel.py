@@ -8,7 +8,7 @@ from peewee import callable_
 import datetime
 from datetime import timedelta
 import pydantic
-from .schemas import SkillItem, JobSchema, EmployerSchema
+from .schemas import SkillItem, JobSchema, EmployerSchema, UserSchema
 from typing import Literal
 from slugify import slugify
 import uuid
@@ -49,9 +49,11 @@ class JsonField(CharField):
         return json.loads(value)
 
 
-class EnumField(IntegerField):
+class EnumField(FixedCharField):
     def __init__(self, choices: Enum, *args, **kwargs):
-        super(IntegerField, self).__init__(*args, **kwargs)
+        super(FixedCharField, self).__init__(
+            max(choices, lambda enum: len(enum.value)), *args, **kwargs
+        )
         self.choices: Enum = choices
 
     def db_value(self, value):
@@ -157,38 +159,28 @@ class JobCategory(BaseModel):
         return self.total_max_salary / self.count_salary
 
 
-class User(BaseModel):
-    id = FixedCharField(22, default=shortuuid.uuid, primary_key=True)
-    avatar = CharField(null=True)
-    email = FixedCharField(64, index=True)
-    phone_number = FixedCharField(9, index=True)
-    pass_hash = CharField()
-    # job_requests
-
-    def verify_password(self, password):
-        return check_password_hash(self.pass_hash, password)
-
-    def set_password(self, password):
-        self.pass_hash = generate_password_hash(password)
-
-    @staticmethod
-    def hash_password(password):
-        return generate_password_hash(password)
+class Role(str, Enum):
+    Seeker = "seeker"
+    Employer = "employer"
 
 
 @add_table
-class Employer(User):
+class Employer(BaseModel):
     _default_schema_ = EmployerSchema
+
     co_name = TextField(null=True)
     co_address = TextField(null=True)
     co_phones = JsonField(null=True)
     co_ver_code = TextField(null=True)
     city = FixedCharField(30)
-    # jobs
+    # jobs < Job.employer
+    # account - User.employer
 
 
 @add_table
-class Seeker(User):
+class Seeker(BaseModel):
+    # _default_schema_ = SeekerSchema
+
     firstname = CharField(null=True)
     lastname = CharField(null=True)
     cv_content = TextField(null=True)
@@ -197,6 +189,29 @@ class Seeker(User):
     # job_requests < JobRequest.seeker
     # personalities <> Personality.users
     # skills < SeekerSkill.seeker
+    # account - User.seeker
+
+
+@add_table
+class User(BaseModel):
+    _default_schema_ = UserSchema
+
+    id = FixedCharField(22, default=shortuuid.uuid, primary_key=True)
+    avatar = CharField(null=True)
+    email = FixedCharField(64, index=True)
+    phone_number = FixedCharField(9, index=True)
+    pass_hash = CharField()
+    role = EnumField(Role)
+    disabled = BooleanField(default=False)
+    seeker = ForeignKeyField(Seeker, backref="account", null=True)
+    employer = ForeignKeyField(Employer, backref="account", null=True)
+
+    def verify_password(self, password):
+        return check_password_hash(self.pass_hash, password)
+
+    @staticmethod
+    def hash_password(password):
+        return generate_password_hash(password)
 
 
 @add_table

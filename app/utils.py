@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from typing import Union, Any
 from jose import jwt
 from fastapi.middleware import Middleware
-from app.models.dbmodel import Seeker, Employer
+from app.models.dbmodel import User
+from app.models.schemas import TokenData
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
@@ -18,8 +19,7 @@ JWT_REFRESH_SECRET_KEY = os.environ.get(
 )  # should be kept secret
 
 
-def create_access_token(subject: Seeker | Employer, expires_delta: int = None) -> str:
-    role = "seeker" if isinstance(subject, Seeker) else "employer"
+def create_access_token(user: User, expires_delta: timedelta = None) -> str:
     if expires_delta is not None:
         expires_delta = datetime.utcnow() + expires_delta
     else:
@@ -27,30 +27,8 @@ def create_access_token(subject: Seeker | Employer, expires_delta: int = None) -
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     encoded_jwt = jwt.encode(
-        dict(exp=expires_delta, id=subject.id, role=role), JWT_SECRET_KEY, ALGORITHM
+        TokenData(exp=expires_delta, id=user.id, scopes=[user.role.value, "me"]),
+        JWT_SECRET_KEY,
+        ALGORITHM,
     )
     return encoded_jwt
-
-
-def create_refresh_token(subject: Seeker | Employer, expires_delta: int = None) -> str:
-    role = "seeker" if isinstance(subject, Seeker) else "employer"
-    if expires_delta is not None:
-        expires_delta = datetime.utcnow() + expires_delta
-    else:
-        expires_delta = datetime.utcnow() + timedelta(
-            minutes=REFRESH_TOKEN_EXPIRE_MINUTES
-        )
-
-    encoded_jwt = jwt.encode(
-        dict(exp=expires_delta, id=subject.id, role=role), JWT_SECRET_KEY, ALGORITHM
-    )
-    return encoded_jwt
-
-
-def generate_tokens(
-    subject: Seeker | Employer, token_expire: int = None, refresh_token: int = None
-) -> dict[str:str]:
-    return dict(
-        token=create_access_token(subject, token_expire),
-        refresh_token=create_refresh_token(subject, token_expire),
-    )
