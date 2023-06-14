@@ -65,10 +65,47 @@ class LoginInfo(BaseModel):
     role: Role
 
 
-class SkillSchema(BaseModel):
-    id: int = Field(ge=1)
+class Answer(BaseModel):
+    id: int
+    content: str
+
+
+class Question(BaseModel):
+    id: int
+    content: str
+    answers: list[Answer]
+
+
+class ExamInfo(BaseModel):
+    id: int
     title: str
-    desc: str | None
+
+
+class ExamSchema(BaseModel):
+    id: int
+    title: str
+    questions: list[Question]
+
+
+class CourseSchema(BaseModel):
+    slug: str
+    title: str
+    description: str
+    link: str
+
+
+class SkillItem(BaseModel):
+    slug: str
+    title: str
+    description: str | None
+
+
+class SkillItem(BaseModel):
+    slug: str
+    title: str
+    description: str | None
+    courses: list[CourseSchema]
+    exams: list[ExamInfo]
 
 
 class AuthenticationResponse(BaseModel):
@@ -127,7 +164,7 @@ class JobSchema(BaseModel):
     created_on: datetime
     employer: EmployerSummary
     requirements_list: list[str]
-    skills: list[SkillSchema]
+    skills: list[SkillItem]
     timedelta: TimeDelta
 
 
@@ -156,3 +193,23 @@ class PageRequest(BaseModel):
     def page_limit(cls, v):
         assert v >= 1
         return v
+
+
+class GuideItem(BaseModel):
+    slug: str
+    title: str
+    summary: str
+    branch: str
+    expertise: str
+    based_on_personality: bool = False
+
+
+class GuideSchema(BaseModel):
+    slug: str
+    title: str
+    summary: str
+    branch: str
+    expertise: str
+    basic: str
+    advanced: str | None
+    skills: list[SkillItem]

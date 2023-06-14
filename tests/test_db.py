@@ -1,6 +1,6 @@
 import pytest
 from peewee import Database, ManyToManyField
-from dbmodel import *
+from app.models.dbmodel import *
 from random import randint, choices, choice
 from datetime import timedelta
 from datetime import datetime

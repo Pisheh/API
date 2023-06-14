@@ -8,7 +8,7 @@ from peewee import callable_
 import datetime
 from datetime import timedelta
 import pydantic
-from schemas import SkillSchema, JobSchema, EmployerSchema
+from .schemas import SkillItem, JobSchema, EmployerSchema
 from typing import Literal
 from slugify import slugify
 import uuid
@@ -112,7 +112,7 @@ class Guide(BaseModel):
 
 @add_table
 class Skill(BaseModel):
-    _default_schema_ = SkillSchema
+    _default_schema_ = SkillItem
 
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
@@ -220,14 +220,15 @@ class SeekerSkill(BaseModel):
     # exam_results < ExamResult.seeker_skill
 
 
+class ExamTypes(Enum):
+    SKILL = 0
+    PERSONALITY = 1
+
+
 @add_table
 class Exam(BaseModel):
-    class Types(Enum):
-        SKILL = 0
-        PERSONALITY = 1
-
     title = CharField()
-    type = EnumField(Types)
+    type = EnumField(ExamTypes)
     skill = ForeignKeyField(Skill, backref="exams")
     personality = ForeignKeyField(Personality, backref="exams")
 

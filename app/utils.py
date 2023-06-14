@@ -2,7 +2,8 @@ import os
 from datetime import datetime, timedelta
 from typing import Union, Any
 from jose import jwt
-from dbmodel import Seeker, Employer
+from fastapi.middleware import Middleware
+from app.models.dbmodel import Seeker, Employer
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
