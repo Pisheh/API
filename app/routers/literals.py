@@ -12,4 +12,4 @@ def get_cities() -> list["str"]:
 
 @router.get("branches")
 def get_branches() -> list[BranchInfo]:
-    return BRANCHES
+    return [BranchInfo(**b) for b in BRANCHES]
