@@ -6,7 +6,7 @@ router = APIRouter()
 
 
 @router.get("cities")
-def get_cities() -> list["str"]:
+def get_cities() -> list[str]:
     return CITIES
 
 

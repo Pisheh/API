@@ -24,7 +24,7 @@ from app.utils import create_access_token
 app = FastAPI()
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(guidance.router, prefix="/guidances", tags=["Guidance"])
-app.include_router(jobs.router, prefix="/jobs", tags="Jobs")
+app.include_router(jobs.router, prefix="/jobs", tags=["Jobs"])
 app.include_router(literals.router, prefix="/literals", tags=["Literals"])
 
 db_ = SqliteDatabase(".testdb.sqlite")

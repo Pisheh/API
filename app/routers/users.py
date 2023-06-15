@@ -22,4 +22,4 @@ router = APIRouter()
 async def get_me(
     current_user: Annotated[User, Security(get_current_user, scopes=Scopes.me)]
 ) -> UserSchema:
-    return UserSchema(current_user)
+    return current_user.to_schema(UserSchema)

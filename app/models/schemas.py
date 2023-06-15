@@ -1,7 +1,7 @@
 from pydantic import EmailStr, validator, PositiveInt, Field
 from fastapi_utils.api_model import APIModel as BaseModel
 from pydantic.fields import ModelField
-from typing import Literal
+from typing import Literal, ForwardRef
 from uuid import UUID
 from datetime import timedelta, datetime
 from enum import Enum
@@ -66,6 +66,9 @@ class UserQueryResult(BaseModel):
 class EmployerInfo(BaseModel):
     co_name: str
     city: str
+
+
+# JobSchema = ForwardRef("JobSchema")
 
 
 class EmployerSchema(BaseModel):
@@ -193,7 +196,7 @@ class JobSchema(BaseModel):
     category: JobCategoryInfo
 
 
-EmployerSchema.update_forward_refs(JobSchema=JobSchema)
+# JobSchema.update_forward_refs()
 
 
 class PaginationMeta(BaseModel):

@@ -17,7 +17,7 @@ async def search1(
         User | None, Security(get_user_or_none, scopes=Scopes.me + Scopes.seeker)
     ] = None,
     filter: Annotated[None | Literal["personal"], Query()] = None,
-) -> OrderedSet[GuideItem]:
+) -> list[GuideItem]:
     seeker = User.seeker
     result = OrderedSet()
     query = None
@@ -45,7 +45,7 @@ async def search2(
     min_salary: Annotated[int, Query()],
     max_salary: Annotated[int, Query()],
     branches: Annotated[None | list[str], Query()] = None,
-) -> OrderedSet[GuideItem]:
+) -> list[GuideItem]:
     raise NotImplementedError  # TODO
 
 
