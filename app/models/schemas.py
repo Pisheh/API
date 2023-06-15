@@ -229,6 +229,11 @@ class GuideItem(BaseModel):
     recommended: bool = False
 
 
+class BranchInfo(BaseModel):
+    branch: str
+    expertise: list[str]
+
+
 class GuideSchema(BaseModel):
     slug: str
     title: str

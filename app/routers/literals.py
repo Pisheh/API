@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.models.schemas import BranchInfo
 from app.literals import *
 
 router = APIRouter()
@@ -10,5 +11,5 @@ def get_cities() -> list["str"]:
 
 
 @router.get("branches")
-def get_branches() -> dict[str : list[str]]:
+def get_branches() -> list[BranchInfo]:
     return BRANCHES
