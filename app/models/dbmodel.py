@@ -8,7 +8,7 @@ from peewee import callable_
 import datetime
 from datetime import timedelta
 import pydantic
-from .schemas import SkillItem, JobSchema, EmployerSchema, UserSchema
+from .schemas import SkillItem, EmployerSchema, UserSchema, Role, ExamTypes
 from typing import Literal
 from slugify import slugify
 import uuid
@@ -159,11 +159,6 @@ class JobCategory(BaseModel):
         return self.total_max_salary / self.count_salary
 
 
-class Role(str, Enum):
-    Seeker = "seeker"
-    Employer = "employer"
-
-
 @add_table
 class Employer(BaseModel):
     _default_schema_ = EmployerSchema
@@ -233,11 +228,6 @@ class SeekerSkill(BaseModel):
     score = IntegerField()
 
     # exam_results < ExamResult.seeker_skill
-
-
-class ExamTypes(Enum):
-    SKILL = 0
-    PERSONALITY = 1
 
 
 @add_table

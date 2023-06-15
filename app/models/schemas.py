@@ -4,10 +4,20 @@ from pydantic.fields import ModelField
 from typing import Literal
 from uuid import UUID
 from datetime import timedelta, datetime
-from .dbmodel import Role
+from enum import Enum
 import re
 
 __phone_num_re = re.compile(r"^09(\d{9})$")
+
+
+class ExamTypes(str, Enum):
+    skill = "skill"
+    personality = "personality"
+
+
+class Role(str, Enum):
+    Seeker = "seeker"
+    Employer = "employer"
 
 
 class PhoneNumber(str):
