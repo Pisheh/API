@@ -52,7 +52,7 @@ class JsonField(CharField):
 class EnumField(FixedCharField):
     def __init__(self, choices: Enum, *args, **kwargs):
         super(FixedCharField, self).__init__(
-            max(choices, lambda enum: len(enum.value)), *args, **kwargs
+            max(choices, key=lambda enum: len(enum.value)), *args, **kwargs
         )
         self.choices: Enum = choices
 
