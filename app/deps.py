@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt, JWTError
 from pydantic import ValidationError
 from peewee import DoesNotExist
+from enum import Enum
 
 from app.utils import ALGORITHM, JWT_SECRET_KEY
 from app.models.dbmodel import User
@@ -20,6 +21,13 @@ oauth2_scheme = OAuth2PasswordBearer(
         "admin": "have access to anything",
     },
 )
+
+
+class Scopes(list, Enum):
+    me = ["me"]
+    employer = ["employer"]
+    seeker = ["seeker"]
+    admin = ["admin"]
 
 
 async def get_current_user(
