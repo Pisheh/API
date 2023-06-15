@@ -121,7 +121,7 @@ async def get_user(user: UserQuery) -> UserQueryResult:
 
 
 @app.post("/signup")
-async def signup(signup_info: SignupInfo):
+async def signup(signup_info: SignupInfo) -> UserSchema:
     if not (signup_info.employer or signup_info.seeker):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
@@ -137,6 +137,7 @@ async def signup(signup_info: SignupInfo):
         elif signup_info.role == Role.Seeker:
             user.seeker = Seeker.create(**signup_info.seeker.dict())
         user.save()
+        return user.to_schema(UserSchema)
     except IntegrityError:
         raise HTTPException(status.HTTP_409_CONFLICT, "user.exists")
 

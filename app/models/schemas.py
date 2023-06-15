@@ -74,10 +74,16 @@ class EmployerSchema(BaseModel):
     jobs: list["JobSchema"]
 
 
+class SkillItem(BaseModel):
+    slug: str
+    title: str = None
+    description: str = None
+
+
 class SeekerInfo(BaseModel):
     firstname: str
     lastname: str
-    skills: list["SkillItem"] = None
+    skills: list[SkillItem] = None
 
 
 class UserSchema(BaseModel):
@@ -133,12 +139,6 @@ class CourseSchema(BaseModel):
     link: str
 
 
-class SkillItem(BaseModel):
-    slug: str
-    title: str = None
-    description: str = None
-
-
 class SkillSchema(BaseModel):
     slug: str
     title: str
@@ -191,6 +191,9 @@ class JobSchema(BaseModel):
     skills: list[SkillItem]
     timedelta: TimeDelta
     category: JobCategoryInfo
+
+
+EmployerSchema.update_forward_refs(JobSchema=JobSchema)
 
 
 class PaginationMeta(BaseModel):
