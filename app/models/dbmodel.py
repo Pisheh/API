@@ -1,3 +1,4 @@
+from _typeshed import Incomplete
 from peewee import *
 from playhouse.shortcuts import model_to_dict
 from passlib.hash import pbkdf2_sha256
@@ -14,6 +15,7 @@ from slugify import slugify
 import uuid
 import shortuuid
 import json
+import pydantic
 
 generate_password_hash = lambda p: pbkdf2_sha256.using(rounds=8000, salt_size=10).hash(
     p
@@ -47,6 +49,24 @@ class JsonField(CharField):
 
     def python_value(self, value):
         return json.loads(value)
+
+
+class JsonObjectField(TextField):
+    def __init__(
+        self, json_schema: pydantic.BaseModel, null: bool = ..., **kwargs
+    ) -> None:
+        super().__init__(null, **kwargs)
+        self.json_schema = json_schema
+
+    def db_value(self, value: pydantic.BaseModel):
+        if isinstance(value, self.json_schema):
+            return value.json()
+        raise ValueError(f"value must be an instance of {type(self.json_schema)}")
+
+    def python_value(self, value: str | None):
+        if value:
+            return self.json_schema(**json.loads(value))
+        return value
 
 
 class EnumField(FixedCharField):
@@ -102,14 +122,16 @@ class Guide(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
     summary = CharField(null=True)
-    basic = TextField()
-    advanced = TextField(null=True)
     branch = FixedCharField(64, index=True)
     expertise = FixedCharField(64, index=True)
+    basic = TextField()
+    advanced = TextField(null=True)
+    min_salary = IntegerField()
+    max_salary = IntegerField()
 
-    # personalities <> Personality.guides
+    # personalities > Personality.guides
     # job_category - JobCategory.guide
-    # skills <> Skill.guides
+    # skills > Skill.guide
 
 
 @add_table
@@ -119,7 +141,7 @@ class Skill(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
     description = CharField(null=True)
-    guides = ManyToManyField(Guide, backref="guides")
+    guide = ForeignKeyField(Guide, backref="skills")
     exam_scores = JsonField()
 
     # jobs <> Job.skills
@@ -133,30 +155,30 @@ class Course(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
     description = CharField()
-    skill = ForeignKeyField(Skill, backref="courses")
     link = CharField()
     clicks = IntegerField()
+    guide = ForeignKeyField(Guide, backref="courses")
+    skill = ForeignKeyField(Skill, backref="courses")
+    previous = ForeignKeyField("self", backref="next", null=True)
+
+    # next < self.previous
 
 
 @add_table
 class JobCategory(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
-    total_min_salary = IntegerField()
-    total_max_salary = IntegerField()
-    count_salary = IntegerField()
     guide = ForeignKeyField(Guide, backref="job_category")
 
-    # personalities <> Personality.job_cats
     # jobs < Job.category
 
     @property
     def avg_min_salary(self):
-        return self.total_min_salary / self.count_salary
+        return self.jobs.select(Job, fn.AVG(Job.min_salary)).scalar()
 
     @property
     def avg_mav_salary(self):
-        return self.total_max_salary / self.count_salary
+        return self.jobs.select(Job, fn.AVG(Job.max_salary)).scalar()
 
 
 @add_table
@@ -230,29 +252,23 @@ class SeekerSkill(BaseModel):
     # exam_results < ExamResult.seeker_skill
 
 
+class Answer(pydantic.BaseModel):
+    content: str
+    score: float
+
+
+class Question(BaseModel):
+    content: str
+    answers: list[Answer]
+
+
 @add_table
 class Exam(BaseModel):
     title = CharField()
     type = EnumField(ExamTypes)
     skill = ForeignKeyField(Skill, backref="exams")
     personality = ForeignKeyField(Personality, backref="exams")
-
-    # questions < Question.exam
-
-
-@add_table
-class Question(BaseModel):
-    exam = ForeignKeyField(Exam, backref="questions")
-    content = CharField()
-
-    # answers < Answer.question
-
-
-@add_table
-class Answer(BaseModel):
-    question = ForeignKeyField(Question, backref="answers")
-    content = CharField()
-    score = FloatField()
+    questions = JsonObjectField(Question)
 
 
 @add_table

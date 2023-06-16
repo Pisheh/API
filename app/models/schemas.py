@@ -147,6 +147,7 @@ class SkillSchema(BaseModel):
     title: str
     description: str = None
     courses: list[CourseSchema]
+    guide: "GuideItem"
     exams: list[ExamInfo]
 
 
@@ -248,4 +249,4 @@ class GuideSchema(BaseModel):
     expertise: str
     basic: str
     advanced: str = None
-    skills: list[SkillItem]
+    skills: list[SkillSchema]
