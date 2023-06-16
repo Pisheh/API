@@ -142,12 +142,21 @@ class CourseSchema(BaseModel):
     link: str
 
 
+class GuideItem(BaseModel):
+    slug: str
+    title: str
+    summary: str
+    branch: str
+    expertise: str
+    recommended: bool = False
+
+
 class SkillSchema(BaseModel):
     slug: str
     title: str
     description: str = None
     courses: list[CourseSchema]
-    guide: "GuideItem"
+    guide: GuideItem
     exams: list[ExamInfo]
 
 
@@ -225,15 +234,6 @@ class PageRequest(BaseModel):
     def page_limit(cls, v):
         assert v >= 1
         return v
-
-
-class GuideItem(BaseModel):
-    slug: str
-    title: str
-    summary: str
-    branch: str
-    expertise: str
-    recommended: bool = False
 
 
 class BranchInfo(BaseModel):
