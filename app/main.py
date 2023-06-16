@@ -134,7 +134,7 @@ async def signup(signup_info: SignupInfo) -> UserSchema:
         )
         if signup_info.role == Role.Employer:
             user.employer = Employer.create(**signup_info.employer.dict())
-        elif signup_info.role == Role.Seeker:
+        elif signup_info.role == Role.seeker:
             user.seeker = Seeker.create(**signup_info.seeker.dict())
         user.save()
         return user.to_schema(UserSchema)

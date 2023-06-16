@@ -16,8 +16,8 @@ class ExamTypes(str, Enum):
 
 
 class Role(str, Enum):
-    Seeker = "seeker"
-    Employer = "employer"
+    seeker = "seeker"
+    employer = "employer"
 
 
 class PhoneNumber(str):
@@ -216,9 +216,14 @@ class PaginationMeta(BaseModel):
     per_page: PositiveInt
 
 
-class Jobs(BaseModel):
+class JobsPage(BaseModel):
     meta: PaginationMeta
     jobs: list[JobSchema]
+
+
+class GuidesPage(BaseModel):
+    meta: PaginationMeta
+    guides: list[GuideItem]
 
 
 class PageRequest(BaseModel):

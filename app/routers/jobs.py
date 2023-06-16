@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Path, HTTPException, status
 from math import ceil
 from typing import Annotated
-from app.models.schemas import PageRequest, Jobs, JobSchema, PaginationMeta
+from app.models.schemas import PageRequest, JobsPage, JobSchema, PaginationMeta
 from app.models.dbmodel import Job
 
 router = APIRouter()
 
 
 @router.post("/page")
-async def get_jobs(page: PageRequest) -> Jobs:
+async def get_jobs(page: PageRequest) -> JobsPage:
     jobs_count = Job.select(Job.expired == False).count()
     pages_count = ceil(jobs_count / page.per_page)
     if page.page <= pages_count:
@@ -20,9 +20,8 @@ async def get_jobs(page: PageRequest) -> Jobs:
             .paginate(page.page, page.per_page)
         ):
             jobs.append(job.to_schema(JobSchema))
-        return Jobs(
+        return JobsPage(
             meta=PaginationMeta(
-                success=True,
                 total_count=jobs_count,
                 current_page=page.page,
                 page_count=pages_count,

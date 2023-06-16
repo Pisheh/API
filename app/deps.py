@@ -22,6 +22,18 @@ oauth2_scheme = OAuth2PasswordBearer(
     },
 )
 
+optional_oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/login",
+    scheme_name="JWT",
+    scopes={
+        "employer": "Get access to employers panel",
+        "seeker": "Get access to seekers panel",
+        "me": "Read information about the current user",
+        "admin": "have access to anything",
+    },
+    auto_error=False,
+)
+
 
 class Scopes(list, Enum):
     me = ["me"]
@@ -62,24 +74,26 @@ async def get_current_user(
         raise credentials_exception
 
 
-async def get_user_or_none(
-    security_scopes: SecurityScopes,
-    token: Annotated[str, Depends(oauth2_scheme)] = None,
-):
-    if not token:
-        return None
+class get_user_or_none:
+    def __init__(self, scopes: list | None = None):
+        self.scopes = scopes
 
-    try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
-        token_data = TokenData(**payload)
-        if datetime.fromtimestamp(token_data.exp) < datetime.now():
+    def __call__(self, token: Annotated[str, Depends(optional_oauth2_scheme)] = None):
+        if not token:
             return None
-        user = User.get_by_id(token_data.id)
-        if user.disabled:
-            return None
-        for scope in security_scopes.scopes:
-            if scope not in token_data.scopes:
+
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+            token_data = TokenData(**payload)
+            if datetime.fromtimestamp(token_data.exp) < datetime.now():
                 return None
-        return user
-    except (JWTError, ValidationError, DoesNotExist):
-        return None
+            user = User.get_by_id(token_data.id)
+            if user.disabled:
+                return None
+            if self.scopes:
+                for scope in self.scopes:
+                    if scope not in token_data.scopes:
+                        return None
+            return user
+        except (JWTError, ValidationError, DoesNotExist):
+            return None

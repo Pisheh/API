@@ -128,7 +128,6 @@ class Guide(BaseModel):
     min_salary = IntegerField()
     max_salary = IntegerField()
 
-    # personalities > Personality.guides
     # job_category - JobCategory.guide
     # skills > Skill.guide
 
@@ -167,7 +166,7 @@ class Course(BaseModel):
 class JobCategory(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
-    guide = ForeignKeyField(Guide, backref="job_category")
+    guide = ForeignKeyField(Guide, backref="job_category", null=True)
 
     # jobs < Job.category
 
@@ -231,18 +230,6 @@ class User(BaseModel):
 
 
 @add_table
-class Personality(BaseModel):
-    slug = FixedCharField(32, primary_key=True)
-    name = FixedCharField(32)
-    description = CharField()
-    users = ManyToManyField(Seeker, backref="personalities")
-    job_cats = ManyToManyField(JobCategory, backref="personalities")
-    guides = ManyToManyField(Guide, backref="personalities")
-
-    # exams < Exam.personality
-
-
-@add_table
 class SeekerSkill(BaseModel):
     skill = ForeignKeyField(Skill, backref="seekers")
     seeker = ForeignKeyField(Seeker, backref="skills")
@@ -266,7 +253,6 @@ class Exam(BaseModel):
     title = CharField()
     type = EnumField(ExamTypes)
     skill = ForeignKeyField(Skill, backref="exams")
-    personality = ForeignKeyField(Personality, backref="exams")
     questions = JsonObjectField(Question)
 
 

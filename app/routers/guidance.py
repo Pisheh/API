@@ -2,51 +2,37 @@ from fastapi import APIRouter, Depends, Query, Path, HTTPException, status, Secu
 from app.deps import get_user_or_none, Scopes
 from typing import Annotated, Literal
 from app.models.dbmodel import Guide, User
-from app.models.schemas import GuideItem, GuideSchema
+from app.models.schemas import GuideItem, GuideSchema, Role, GuidesPage, PaginationMeta
 from ordered_set import OrderedSet
 from peewee import IntegrityError
+from pydantic import PositiveInt
+from math import ceil
 
 router = APIRouter()
 
 
-@router.get("/search1")
-async def search1(
-    branch: Annotated[str | None, Query()] = None,
-    expertise: Annotated[str | None, Query()] = None,
-    user: Annotated[
-        User | None, Security(get_user_or_none, scopes=Scopes.me + Scopes.seeker)
-    ] = None,
-    filter: Annotated[None | Literal["personal"], Query()] = None,
+@router.get("/")
+async def get_guides(
+    page: Annotated(PositiveInt, Query()) = None,
+    per_page: Annotated(PositiveInt, Query()) = None,
 ) -> list[GuideItem]:
-    seeker = User.seeker
-    result = OrderedSet()
-    query = None
-    if branch:
-        query = Guide.branch == branch
-    if branch and expertise:
-        query &= Guide.expertise == expertise
-    if seeker:
-        for personality in seeker.personalities:
-            for guide in personality.guides.where(query):
-                guide.recommended = True
-                result.add(guide.to_schema(GuideItem))
-
-        if filter == "personal":
-            return result
-
-    for guide in Guide.select().where(query):
-        result.add(guide.to_schema(GuideItem))
-
-    return result
-
-
-@router.get("/search2")
-async def search2(
-    min_salary: Annotated[int, Query()],
-    max_salary: Annotated[int, Query()],
-    branches: Annotated[None | list[str], Query()] = None,
-) -> list[GuideItem]:
-    raise NotImplementedError  # TODO
+    guides_count = Guide.select().count()
+    pages_count = ceil(guides_count / per_page)
+    if page <= pages_count:
+        return GuidesPage(
+            meta=PaginationMeta(
+                total_count=guides_count,
+                current_page=page.page,
+                page_count=pages_count,
+                per_page=page.per_page,
+            ),
+            guides=[
+                guide.to_schema(GuideItem)
+                for guide in Guide.select().pagination(page, per_page)
+            ],
+        )
+    else:
+        HTTPException(400, "Guides.bad_pagination")
 
 
 @router.get("/{slug}")
