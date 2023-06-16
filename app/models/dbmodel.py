@@ -1,4 +1,3 @@
-from _typeshed import Incomplete
 from peewee import *
 from playhouse.shortcuts import model_to_dict
 from passlib.hash import pbkdf2_sha256
