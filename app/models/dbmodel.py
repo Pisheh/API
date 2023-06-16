@@ -44,10 +44,14 @@ _default = lambda arg, value: value if arg is DEFAULT else arg
 
 class JsonField(CharField):
     def db_value(self, value):
-        return json.dumps(value)
+        if value:
+            return json.dumps(value)
+        return value
 
     def python_value(self, value):
-        return json.loads(value)
+        if value:
+            return json.loads(value)
+        return value
 
 
 class JsonObjectField(TextField):
@@ -88,10 +92,15 @@ class BaseModel(Model):
     class Meta:
         database = database_proxy
 
-    def to_schema(self, type_: pydantic.BaseModel = DEFAULT) -> pydantic.BaseModel:
+    def to_schema(
+        self, type_: pydantic.BaseModel = DEFAULT, **kwargs
+    ) -> pydantic.BaseModel:
         data = {}
         type_ = _default(type_, self._default_schema_)
         for name, field in type_.__fields__.items():
+            if name in kwargs:
+                data[name] = kwargs[name]
+                continue
             value = getattr(self, name)
             value_type = type(value)
             if isinstance(value, BaseModel):
@@ -125,8 +134,8 @@ class Guide(BaseModel):
     expertise = FixedCharField(64, index=True)
     basic = TextField()
     advanced = TextField(null=True)
-    min_salary = IntegerField()
-    max_salary = IntegerField()
+    min_salary = IntegerField(null=True)
+    max_salary = IntegerField(null=True)
 
     # job_category - JobCategory.guide
     # skills > Skill.guide
@@ -139,8 +148,8 @@ class Skill(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
     description = CharField(null=True)
-    guide = ForeignKeyField(Guide, backref="skills")
-    exam_scores = JsonField()
+    guide = ForeignKeyField(Guide, backref="skills", null=True)
+    exam_scores = JsonField(null=True)
 
     # jobs <> Job.skills
     # exams < Exam
@@ -216,7 +225,7 @@ class User(BaseModel):
     email = FixedCharField(64, index=True)
     phone_number = FixedCharField(9, index=True)
     pass_hash = CharField()
-    role = EnumField(Role)
+    role = FixedCharField(15)
     disabled = BooleanField(default=False)
     seeker = ForeignKeyField(Seeker, backref="account", null=True)
     employer = ForeignKeyField(Employer, backref="account", null=True)
@@ -248,21 +257,21 @@ class Question(pydantic.BaseModel):
     answers: list[Answer]
 
 
-@add_table
-class Exam(BaseModel):
-    title = CharField()
-    type = EnumField(ExamTypes)
-    skill = ForeignKeyField(Skill, backref="exams")
-    questions = JsonObjectField(Question)
+# @add_table
+# class Exam(BaseModel):
+#     title = CharField()
+#     type = EnumField(ExamTypes)
+#     skill = ForeignKeyField(Skill, backref="exams")
+#     questions = JsonObjectField(Question)
 
 
-@add_table
-class ExamResult(BaseModel):
-    exam = ForeignKeyField(Exam)
-    seeker = ForeignKeyField(Seeker, backref="exam_results")
-    seeker_skill = ForeignKeyField(SeekerSkill, backref="exam_results", null=True)
-    data = JsonField()
-    score = IntegerField()
+# @add_table
+# class ExamResult(BaseModel):
+#     exam = ForeignKeyField(Exam)
+#     seeker = ForeignKeyField(Seeker, backref="exam_results")
+#     seeker_skill = ForeignKeyField(SeekerSkill, backref="exam_results", null=True)
+#     data = JsonField()
+#     score = IntegerField()
 
 
 @add_table
@@ -271,7 +280,7 @@ class Job(BaseModel):
     description = TextField()
     requirements = JsonField()
     skills = ManyToManyField(Skill, backref="jobs")
-    category = ForeignKeyField(JobCategory, backref="jobs")
+    category = ForeignKeyField(JobCategory, backref="jobs", null=True)
     min_salary = IntegerField()
     max_salary = IntegerField()
     created_on = DateTimeField(default=datetime.datetime.now)

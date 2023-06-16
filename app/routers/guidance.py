@@ -15,20 +15,20 @@ router = APIRouter()
 async def get_guides(
     page: Annotated[PositiveInt, Query()] = None,
     per_page: Annotated[PositiveInt, Query()] = None,
-) -> list[GuideItem]:
+) -> GuidesPage:
     guides_count = Guide.select().count()
     pages_count = ceil(guides_count / per_page)
     if page <= pages_count:
         return GuidesPage(
             meta=PaginationMeta(
                 total_count=guides_count,
-                current_page=page.page,
+                current_page=page,
                 page_count=pages_count,
-                per_page=page.per_page,
+                per_page=per_page,
             ),
             guides=[
-                guide.to_schema(GuideItem)
-                for guide in Guide.select().pagination(page, per_page)
+                guide.to_schema(GuideItem, recommended=False)
+                for guide in Guide.select().paginate(page, per_page)
             ],
         )
     else:
