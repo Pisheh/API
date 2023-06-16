@@ -13,8 +13,8 @@ router = APIRouter()
 
 @router.get("/")
 async def get_guides(
-    page: Annotated(PositiveInt, Query()) = None,
-    per_page: Annotated(PositiveInt, Query()) = None,
+    page: Annotated[PositiveInt, Query()] = None,
+    per_page: Annotated[PositiveInt, Query()] = None,
 ) -> list[GuideItem]:
     guides_count = Guide.select().count()
     pages_count = ceil(guides_count / per_page)
