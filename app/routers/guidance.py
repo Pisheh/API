@@ -38,7 +38,9 @@ async def get_guides(
 @router.get("/{slug}")
 async def get_guide(slug: Annotated[str, Path()]) -> GuideSchema:
     try:
-        return Guide.get(Guide.slug == slug).to_schema(GuideSchema)
+        if slug:
+            return Guide.get(Guide.slug == slug).to_schema(GuideSchema)
+        raise HTTPException(status.HTTP_400_BAD_REQUEST)
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="guide.not_found"

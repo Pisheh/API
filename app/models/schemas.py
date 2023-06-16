@@ -254,4 +254,4 @@ class GuideSchema(BaseModel):
     expertise: str
     basic: str
     advanced: str = None
-    skills: list[SkillSchema]
+    skills: list[SkillSchema] = []

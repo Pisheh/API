@@ -1,4 +1,5 @@
 from peewee import *
+import peewee
 from playhouse.shortcuts import model_to_dict
 from passlib.hash import pbkdf2_sha256
 from enum import Enum
@@ -105,11 +106,18 @@ class BaseModel(Model):
             value_type = type(value)
             if isinstance(value, BaseModel):
                 value = value.to_schema(field.type_)
-            if name in self._meta.manytomany or name in self._meta.backrefs:
+            if (
+                field in self._meta.manytomany
+                or field in self._meta.backrefs
+                or isinstance(value, peewee.ModelSelect)
+            ):
                 l = []
                 for v in value:
                     l.append(v.to_schema(field.sub_fields[0].type_))
-                value = l
+                if l:
+                    value = l
+                else:
+                    continue
             data[name] = value
         return type_(**data)
 
