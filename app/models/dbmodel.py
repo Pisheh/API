@@ -256,7 +256,7 @@ class Answer(pydantic.BaseModel):
     score: float
 
 
-class Question(BaseModel):
+class Question(pydantic.BaseModel):
     content: str
     answers: list[Answer]
 
