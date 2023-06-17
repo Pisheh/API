@@ -200,7 +200,7 @@ class JobSchema(BaseModel):
     salary: Salary = None
     created_on: datetime
     employer: EmployerInfo
-    requirements_list: list[str]
+    requirements: list[str]
     skills: list[SkillItem]
     timedelta: TimeDelta
     category: JobCategoryInfo
