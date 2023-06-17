@@ -226,21 +226,6 @@ class GuidesPage(BaseModel):
     guides: list[GuideItem]
 
 
-class PageRequest(BaseModel):
-    page: PositiveInt = 1
-    per_page: PositiveInt = 30
-
-    @validator("per_page")
-    def per_page_limit(cls, v):
-        assert v <= 100, "perPage out of limitation"
-        return v
-
-    @validator("page")
-    def page_limit(cls, v):
-        assert v >= 1
-        return v
-
-
 class BranchInfo(BaseModel):
     branch: str
     expertise: list[str]

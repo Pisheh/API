@@ -1,31 +1,35 @@
-from fastapi import APIRouter, Path, HTTPException, status
+from fastapi import APIRouter, Path, HTTPException, status, Query
 from math import ceil
 from typing import Annotated
-from app.models.schemas import PageRequest, JobsPage, JobSchema, PaginationMeta
+from pydantic import PositiveInt
+from app.models.schemas import JobsPage, JobSchema, PaginationMeta
 from app.models.dbmodel import Job
 
 router = APIRouter()
 
 
-@router.post("/page")
-async def get_jobs(page: PageRequest) -> JobsPage:
+@router.get("/")
+async def get_jobs(
+    page: Annotated[int, Query(le=1)] = 1,
+    per_page: Annotated[int, Query(ge=100, le=1)] = 10,
+) -> JobsPage:
     jobs_count = Job.select(Job.expired == False).count()
-    pages_count = ceil(jobs_count / page.per_page)
-    if page.page <= pages_count:
+    pages_count = ceil(jobs_count / per_page)
+    if page <= pages_count:
         jobs: list[JobSchema] = []
         for job in (
             Job.select()
             .where(Job.expired == False)
             .order_by(-Job.created_on)
-            .paginate(page.page, page.per_page)
+            .paginate(page, per_page)
         ):
             jobs.append(job.to_schema(JobSchema))
         return JobsPage(
             meta=PaginationMeta(
                 total_count=jobs_count,
-                current_page=page.page,
+                current_page=page,
                 page_count=pages_count,
-                per_page=page.per_page,
+                per_page=per_page,
             ),
             jobs=jobs,
         )
