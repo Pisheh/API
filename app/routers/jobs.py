@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.get("/")
 async def get_jobs(
-    page: Annotated[int, Query(le=1)] = 1,
-    per_page: Annotated[int, Query(ge=100, le=1)] = 10,
+    page: Annotated[int, Query(ge=1)] = 1,
+    per_page: Annotated[int, Query(le=100, ge=1)] = 10,
 ) -> JobsPage:
     jobs_count = Job.select(Job.expired == False).count()
     pages_count = ceil(jobs_count / per_page)
