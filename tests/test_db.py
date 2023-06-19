@@ -62,34 +62,55 @@ class TestAddData:
         for job in JOBS:
             skills = []
             for skill_title in job["skills"]:
-                skill, c = Skill.get_or_create(
-                    slug=slugify(skill_title), title=skill_title
-                )
+                skill, c = Skill.get_or_create(title=skill_title)
                 skills.append(skill.slug)
             job["skills"] = skills
 
-    def test_add_guides(self):
-        for guide in GUIDES:
-            Guide.create(**guide)
+    @pytest.mark.run(order=1)
+    def test_add_personalities(self):
+        for job in JOBS:
+            category = job["category"]
+            for persona in category["personalities"]:
+                personality, _ = Personality.get_or_create(slug=persona)
 
     @pytest.mark.run(order=2)
+    def test_add_category(self):
+        for job in JOBS:
+            category = job["category"]
+            personalities = category["personalities"]
+            del category["personalities"]
+            category["slug"] = slugify(category["title"])
+            c = JobCategory.get_or_none(JobCategory.slug == slugify(category["title"]))
+            if not c:
+                c = JobCategory.create(**category)
+                for persona in personalities:
+                    c.personalities.add(Personality.get_by_id(persona))
+            job["category"] = c.slug
+
+    @pytest.mark.run(order=3)
+    def test_add_guides(self):
+        for guide in GUIDES:
+            category = JobCategory.get_or_none(title="job_category")
+            if not category:
+                continue
+            del guide["job_category"]
+            guide = Guide.create(**guide)
+            guide["job_category"] = category.slug
+
+    @pytest.mark.run(order=4)
     def test_add_employer(self):
         for i, employer in enumerate(employers):
             user = User.create(
                 email=f"example{i}@example.com",
                 phone_number=f"091234567{i:02d}",
                 pass_hash=User.hash_password(f"password{i}"),
-                role="employer",
+                role=Role.employer,
             )
             user.employer = Employer.create(
                 co_name=employer["name"], city=choice(CITIES)
             )
 
-    @pytest.mark.run(order=3)
-    def test_add_categories(self):
-        for category in JOB_CATEGORIES:
-            JobCategory.create(**category)
-
+    @pytest.mark.run(order=5)
     @pytest.mark.run(order=3)
     def test_add_job(self):
         emp = [e for e in Employer.select()]
@@ -113,9 +134,7 @@ class TestAddData:
                 employer=emp[i % len(emp)],
                 min_salary=min_salary,
                 max_salary=max_salary,
-                category=JobCategory.get_or_none(
-                    JobCategory.slug == job["job_category"]["slug"]
-                ),
+                category=JobCategory.get(JobCategory.slug == slugify(job["category"])),
             )
             for skill in job["skills"]:
                 j.skills.add(Skill.get_by_id(skill))

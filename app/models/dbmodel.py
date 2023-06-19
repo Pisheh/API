@@ -43,6 +43,13 @@ _clone_set = lambda s: set(s) if s else set()
 _default = lambda arg, value: value if arg is DEFAULT else arg
 
 
+class DBTables(list):
+    def add_many_to_many(self, m2m: ManyToManyField):
+        m2m: Model
+        setattr(self, m2m._meta.table_name, m2m)
+        self.append(m2m)
+
+
 class JsonField(CharField):
     def db_value(self, value):
         if value:
@@ -63,7 +70,9 @@ class JsonObjectField(TextField):
         self.json_schema = json_schema
 
     def db_value(self, value: pydantic.BaseModel):
-        if isinstance(value, self.json_schema):
+        if value in None:
+            return None
+        elif isinstance(value, self.json_schema):
             return value.json()
         raise ValueError(f"value must be an instance of {type(self.json_schema)}")
 
@@ -75,20 +84,42 @@ class JsonObjectField(TextField):
 
 class EnumField(FixedCharField):
     def __init__(self, choices: Enum, *args, **kwargs):
-        super(FixedCharField, self).__init__(
-            max(choices, key=lambda enum: len(enum.value)), *args, **kwargs
-        )
-        self.choices: Enum = choices
+        length = max(map(lambda e: len(e.value), choices))
+        super(FixedCharField, self).__init__(length, *args, **kwargs)
+        self.enum: Enum = choices
 
     def db_value(self, value):
-        return value.value
+        return value and str(value.value)
 
     def python_value(self, value):
-        return self.choices(value)
+        return value and self.enum(value)
 
 
 class BaseModel(Model):
     _default_schema_: pydantic.main.ModelMetaclass = None
+
+    def __init__(self, *args, **kwargs) -> None:
+        if "slug" in self._meta.fields and "slug" not in kwargs and "title" in kwargs:
+            kwargs["slug"] = slugify(kwargs["title"])
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def get(cls, *args, **kwargs):
+        if "slug" in cls._meta.fields and "slug" not in kwargs and "title" in kwargs:
+            kwargs["slug"] = slugify(kwargs["title"])
+        return super().get(*args, **kwargs)
+
+    @classmethod
+    def get_or_create(cls, *args, **kwargs):
+        if "slug" in cls._meta.fields and "slug" not in kwargs and "title" in kwargs:
+            kwargs["slug"] = slugify(kwargs["title"])
+        return super().get_or_create(*args, **kwargs)
+
+    @classmethod
+    def get_or_none(cls, *args, **kwargs):
+        if "slug" in cls._meta.fields and "slug" not in kwargs and "title" in kwargs:
+            kwargs["slug"] = slugify(kwargs["title"])
+        return super().get_or_none(*args, **kwargs)
 
     class Meta:
         database = database_proxy
@@ -122,14 +153,14 @@ class BaseModel(Model):
         return type_(**data)
 
 
-TABLES = []
+TABLES = DBTables()
 
 
 def add_table(model: Model):
     TABLES.append(model)
     for _, m2m in model._meta.manytomany.items():
         m2m: ManyToManyField
-        TABLES.append(m2m.get_through_model())
+        TABLES.add_many_to_many(m2m.get_through_model())
     return model
 
 
@@ -138,15 +169,20 @@ class Guide(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
     summary = CharField(null=True)
-    branch = FixedCharField(64, index=True)
-    expertise = FixedCharField(64, index=True)
     basic = TextField()
     advanced = TextField(null=True)
-    min_salary = IntegerField(null=True)
-    max_salary = IntegerField(null=True)
+
+    @property
+    def job_category(self) -> "JobCategory":
+        return self.job_category_set.get()
+
+    @job_category.setter
+    def job_category(self, job_category):
+        job_category.guide = self
+        job_category.save(only=[JobCategory.guide])
 
     # job_category - JobCategory.guide
-    # skills > Skill.guide
+    # timeline < SkillTimeline.guide
 
 
 @add_table
@@ -156,11 +192,19 @@ class Skill(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
     description = CharField(null=True)
-    guide = ForeignKeyField(Guide, backref="skills", null=True)
     exam_scores = JsonField(null=True)
 
+    @property
+    def exam(self) -> "Exam":
+        return self.exams.get()
+
+    @exam.setter
+    def exam(self, value):
+        value.skill = self
+        value.save(only=[Exam.skill])
+
     # jobs <> Job.skills
-    # exams < Exam
+    # exam - Exam
     # seekers < SeekerSkill.skill
     # courses < Course.skill
 
@@ -174,17 +218,20 @@ class Course(BaseModel):
     clicks = IntegerField()
     guide = ForeignKeyField(Guide, backref="courses")
     skill = ForeignKeyField(Skill, backref="courses")
-    previous = ForeignKeyField("self", backref="next", null=True)
-
-    # next < self.previous
+    index = IntegerField()
 
 
 @add_table
 class JobCategory(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
-    guide = ForeignKeyField(Guide, backref="job_category", null=True)
+    guide = ForeignKeyField(Guide, backref="job_category_set", null=True)
+    discipline = CharField()
+    expertise = CharField()
+    min_salary = IntegerField(null=True)
+    max_salary = IntegerField(null=True)
 
+    # personalities <> Personality.job_categories
     # jobs < Job.category
 
     @property
@@ -205,6 +252,20 @@ class Employer(BaseModel):
     co_phones = JsonField(null=True)
     co_ver_code = TextField(null=True)
     city = FixedCharField(30)
+
+    @property
+    def account(self) -> "User":
+        return self.account_set.get()
+
+    @account.setter
+    def account(self, account_obj):
+        account_obj.seeker = self
+        account_obj.save(only=[User.seeker])
+
+    @property
+    def avatar(self):
+        return self.user.avatar
+
     # jobs < Job.employer
     # account - User.employer
 
@@ -216,6 +277,19 @@ class Seeker(BaseModel):
     firstname = CharField(null=True)
     lastname = CharField(null=True)
     cv_content = TextField(null=True)
+
+    @property
+    def account(self) -> "User":
+        return self.account_set.get()
+
+    @account.setter
+    def account(self, account_obj):
+        account_obj.seeker = self
+        account_obj.save(only=[User.seeker])
+
+    @property
+    def avatar(self):
+        return self.user.avatar
 
     # exam_results < ExamResult.seeker
     # job_requests < JobRequest.seeker
@@ -233,10 +307,10 @@ class User(BaseModel):
     email = FixedCharField(64, index=True)
     phone_number = FixedCharField(9, index=True)
     pass_hash = CharField()
-    role = FixedCharField(15)
+    role = EnumField(Role)
     disabled = BooleanField(default=False)
-    seeker = ForeignKeyField(Seeker, backref="account", null=True)
-    employer = ForeignKeyField(Employer, backref="account", null=True)
+    seeker = ForeignKeyField(Seeker, backref="account_set", null=True)
+    employer = ForeignKeyField(Employer, backref="account_set", null=True)
 
     def verify_password(self, password):
         return check_password_hash(self.pass_hash, password)
@@ -255,35 +329,79 @@ class SeekerSkill(BaseModel):
     # exam_results < ExamResult.seeker_skill
 
 
-class Answer(pydantic.BaseModel):
-    content: str
-    score: float
+@add_table
+class Exam(BaseModel):
+    title = CharField()
+    exam_type = EnumField(ExamTypes)
+    skill = ForeignKeyField(Skill, backref="exams", unique=True)
+    exam_data = JsonField(null=True)
+
+    # questions
 
 
-class Question(pydantic.BaseModel):
-    content: str
-    answers: list[Answer]
+@add_table
+class ExamQuestion(BaseModel):
+    content = CharField()
+    exam = ForeignKeyField(Exam, backref="questions")
+
+    # answers
 
 
-# @add_table
-# class Exam(BaseModel):
-#     title = CharField()
-#     type = EnumField(ExamTypes)
-#     skill = ForeignKeyField(Skill, backref="exams")
-#     questions = JsonObjectField(Question)
+@add_table
+class ExamAnswer(BaseModel):
+    content = CharField()
+    score = FloatField(default=0)
+    question = ForeignKeyField(ExamQuestion, backref="answers")
 
 
-# @add_table
-# class ExamResult(BaseModel):
-#     exam = ForeignKeyField(Exam)
-#     seeker = ForeignKeyField(Seeker, backref="exam_results")
-#     seeker_skill = ForeignKeyField(SeekerSkill, backref="exam_results", null=True)
-#     data = JsonField()
-#     score = IntegerField()
+@add_table
+class ExamResult(BaseModel):
+    exam = ForeignKeyField(Exam)
+    seeker = ForeignKeyField(Seeker, backref="exam_results")
+    seeker_skill = ForeignKeyField(SeekerSkill, backref="exam_results", null=True)
+    data = JsonField()
+    score = IntegerField()
+
+
+class ExamQuestionSchema(pydantic.BaseModel):
+    question_id: int
+    answers: list[int]
+
+
+class ExamProcessDataSchema(pydantic.BaseModel):
+    questions: list[ExamQuestionSchema]
+    user_answers: list[int]
+
+
+@add_table
+class ExamProcess(BaseModel):
+    exam = ForeignKeyField(Exam)
+    seeker = ForeignKeyField(Seeker, backref="exam_processes")
+    created_on = DateTimeField(default=datetime.datetime.now)
+    expire_on = DateTimeField(
+        null=True
+    )  # TODO: Ask stack holders about this field default
+    continuable = BooleanField(default=True)
+    data = JsonObjectField(ExamProcessDataSchema, null=True)
 
 
 @add_table
 class Job(BaseModel):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if (
+            self.category.min_salary is None
+            or self.min_salary < self.category.min_salary
+        ):
+            self.category.min_salary = self.min_salary
+            self.category.save(only=[JobCategory.min_salary])
+        if (
+            self.category.max_salary is None
+            or self.max_salary < self.category.max_salary
+        ):
+            self.category.max_salary = self.max_salary
+            self.category.save(only=[JobCategory.max_salary])
+
     title = CharField()
     description = TextField()
     requirements = JsonField()
@@ -353,3 +471,23 @@ class JobRequest(BaseModel):
             res.expired = True
 
         return res
+
+
+@add_table
+class Personality(BaseModel):
+    slug = FixedCharField(20, primary_key=True)
+    seekers = ManyToManyField(Seeker, "personalities")
+    job_categories = ManyToManyField(JobCategory, "personalities")
+
+
+@add_table
+class SkillTimeline(BaseModel):
+    title = CharField()
+    description = CharField()
+    guide = ForeignKeyField(Guide, backref="timeline")
+    skill = ForeignKeyField(Skill)
+    index = IntegerField()
+
+    @property
+    def courses(self):
+        return self.skill.courses

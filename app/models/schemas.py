@@ -66,6 +66,7 @@ class UserQueryResult(BaseModel):
 class EmployerInfo(BaseModel):
     co_name: str
     city: str
+    avatar: str
 
 
 # JobSchema = ForwardRef("JobSchema")
@@ -74,6 +75,7 @@ class EmployerInfo(BaseModel):
 class EmployerSchema(BaseModel):
     co_name: str
     city: str
+    avatar: str
     jobs: list["JobSchema"]
 
 
@@ -86,6 +88,7 @@ class SkillItem(BaseModel):
 class SeekerInfo(BaseModel):
     firstname: str
     lastname: str
+    avatar: str
     skills: list[SkillItem] = None
 
 
@@ -95,8 +98,8 @@ class UserSchema(BaseModel):
     email = EmailStr
     phone_number = PhoneNumber
     role: Role
-    employer: EmployerInfo = None
-    seeker: SeekerInfo = None
+    employer: EmployerInfo | None = None
+    seeker: SeekerInfo | None = None
 
 
 class SignupInfo(BaseModel):
