@@ -99,27 +99,16 @@ class BaseModel(Model):
     _default_schema_: pydantic.main.ModelMetaclass = None
 
     def __init__(self, *args, **kwargs) -> None:
-        if "slug" in self._meta.fields and "slug" not in kwargs and "title" in kwargs:
-            kwargs["slug"] = slugify(kwargs["title"])
+        if "slug" in self._meta.fields and "slug" not in kwargs:
+            slug = self.slugify(**kwargs)
+            if slug:
+                kwargs["slug"] = slug
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def get(cls, *args, **kwargs):
-        if "slug" in cls._meta.fields and "slug" not in kwargs and "title" in kwargs:
-            kwargs["slug"] = slugify(kwargs["title"])
-        return super().get(*args, **kwargs)
-
-    @classmethod
-    def get_or_create(cls, *args, **kwargs):
-        if "slug" in cls._meta.fields and "slug" not in kwargs and "title" in kwargs:
-            kwargs["slug"] = slugify(kwargs["title"])
-        return super().get_or_create(*args, **kwargs)
-
-    @classmethod
-    def get_or_none(cls, *args, **kwargs):
-        if "slug" in cls._meta.fields and "slug" not in kwargs and "title" in kwargs:
-            kwargs["slug"] = slugify(kwargs["title"])
-        return super().get_or_none(*args, **kwargs)
+    def slugify(cls, **kwargs) -> str:
+        if "title" in kwargs:
+            return slugify(kwargs["title"])
 
     class Meta:
         database = database_proxy
@@ -165,21 +154,39 @@ def add_table(model: Model):
 
 
 @add_table
+class JobCategory(BaseModel):
+    slug = FixedCharField(64, primary_key=True)
+    title = CharField()
+    discipline = CharField()
+    expertise = CharField()
+    min_salary = IntegerField(null=True)
+    max_salary = IntegerField(null=True)
+
+    # personalities <> Personality.job_categories
+    # jobs < Job.category
+    # guides < Guide.category
+
+    @property
+    def avg_min_salary(self):
+        return self.jobs.select(Job, fn.AVG(Job.min_salary)).scalar()
+
+    @property
+    def avg_mav_salary(self):
+        return self.jobs.select(Job, fn.AVG(Job.max_salary)).scalar()
+
+
+@add_table
 class Guide(BaseModel):
     slug = FixedCharField(64, primary_key=True)
     title = CharField()
     summary = CharField(null=True)
     basic = TextField()
     advanced = TextField(null=True)
+    category = ForeignKeyField(JobCategory, backref="guides")
 
     @property
-    def job_category(self) -> "JobCategory":
-        return self.job_category_set.get()
-
-    @job_category.setter
-    def job_category(self, job_category):
-        job_category.guide = self
-        job_category.save(only=[JobCategory.guide])
+    def roadmap(self):
+        return self.timeline.select().order_by(SkillTimeline.index)
 
     # job_category - JobCategory.guide
     # timeline < SkillTimeline.guide
@@ -222,28 +229,6 @@ class Course(BaseModel):
 
 
 @add_table
-class JobCategory(BaseModel):
-    slug = FixedCharField(64, primary_key=True)
-    title = CharField()
-    guide = ForeignKeyField(Guide, backref="job_category_set", null=True)
-    discipline = CharField()
-    expertise = CharField()
-    min_salary = IntegerField(null=True)
-    max_salary = IntegerField(null=True)
-
-    # personalities <> Personality.job_categories
-    # jobs < Job.category
-
-    @property
-    def avg_min_salary(self):
-        return self.jobs.select(Job, fn.AVG(Job.min_salary)).scalar()
-
-    @property
-    def avg_mav_salary(self):
-        return self.jobs.select(Job, fn.AVG(Job.max_salary)).scalar()
-
-
-@add_table
 class Employer(BaseModel):
     _default_schema_ = EmployerSchema
 
@@ -264,7 +249,7 @@ class Employer(BaseModel):
 
     @property
     def avatar(self):
-        return self.user.avatar
+        return self.account.avatar
 
     # jobs < Job.employer
     # account - User.employer
@@ -274,8 +259,8 @@ class Employer(BaseModel):
 class Seeker(BaseModel):
     # _default_schema_ = SeekerSchema
 
-    firstname = CharField(null=True)
-    lastname = CharField(null=True)
+    firstname = CharField()
+    lastname = CharField()
     cv_content = TextField(null=True)
 
     @property
@@ -289,7 +274,7 @@ class Seeker(BaseModel):
 
     @property
     def avatar(self):
-        return self.user.avatar
+        return self.account.avatar
 
     # exam_results < ExamResult.seeker
     # job_requests < JobRequest.seeker
@@ -304,8 +289,8 @@ class User(BaseModel):
 
     id = FixedCharField(22, default=shortuuid.uuid, primary_key=True)
     avatar = CharField(null=True)
-    email = FixedCharField(64, index=True)
-    phone_number = FixedCharField(9, index=True)
+    email = FixedCharField(64, index=True, unique=True)
+    phone_number = FixedCharField(9, index=True, unique=True)
     pass_hash = CharField()
     role = EnumField(Role)
     disabled = BooleanField(default=False)
@@ -333,6 +318,7 @@ class SeekerSkill(BaseModel):
 class Exam(BaseModel):
     title = CharField()
     exam_type = EnumField(ExamTypes)
+    personality_test = FixedCharField(10, null=True)
     skill = ForeignKeyField(Skill, backref="exams", unique=True)
     exam_data = JsonField(null=True)
 
@@ -475,9 +461,16 @@ class JobRequest(BaseModel):
 
 @add_table
 class Personality(BaseModel):
-    slug = FixedCharField(20, primary_key=True)
+    slug = FixedCharField(21, primary_key=True)
+    test = FixedCharField(10)
+    model = FixedCharField(10)
     seekers = ManyToManyField(Seeker, "personalities")
     job_categories = ManyToManyField(JobCategory, "personalities")
+
+    @classmethod
+    def slugify(cls, **kwargs):
+        if "test" in kwargs and "model" in kwargs:
+            return slugify(kwargs["test"] + "-" + kwargs["model"])
 
 
 @add_table

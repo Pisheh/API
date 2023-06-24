@@ -27,7 +27,7 @@ def create_access_token(user: User, expires_delta: timedelta = None) -> str:
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     encoded_jwt = jwt.encode(
-        TokenData(exp=expires_delta, id=user.id, scopes=[user.role.value, "me"]),
+        TokenData(exp=expires_delta, id=user.id, scopes=[user.role.value, "me"]).dict(),
         JWT_SECRET_KEY,
         ALGORITHM,
     )

@@ -39,7 +39,7 @@ class PhoneNumber(str):
         m = __phone_num_re.fullmatch(v)
         if not m:
             raise ValueError("invalid phone number format")
-        return cls(str(m[1]))
+        return cls(m[1])
 
     def __repr__(self):
         return f"PhoneNumber({super().__repr__()})"
@@ -51,8 +51,8 @@ class UserQuery(BaseModel):
 
 
 class LoginInfo(BaseModel):
-    email: EmailStr = None
-    phone_number: PhoneNumber
+    email: EmailStr | None = None
+    phone_number: PhoneNumber | None = None
     password: str
 
 
@@ -72,10 +72,15 @@ class EmployerInfo(BaseModel):
 # JobSchema = ForwardRef("JobSchema")
 
 
+class PersonalitySchema(BaseModel):
+    slug: str
+    test: str
+    model: str
+
+
 class EmployerSchema(BaseModel):
     co_name: str
     city: str
-    avatar: str
     jobs: list["JobSchema"]
 
 
@@ -88,8 +93,8 @@ class SkillItem(BaseModel):
 class SeekerInfo(BaseModel):
     firstname: str
     lastname: str
-    avatar: str
     skills: list[SkillItem] = None
+    personalities: list[PersonalitySchema]
 
 
 class UserSchema(BaseModel):
@@ -149,9 +154,6 @@ class GuideItem(BaseModel):
     slug: str
     title: str
     summary: str
-    branch: str
-    expertise: str
-    recommended: bool = False
 
 
 class SkillSchema(BaseModel):
@@ -159,12 +161,11 @@ class SkillSchema(BaseModel):
     title: str
     description: str = None
     courses: list[CourseSchema]
-    guide: GuideItem
-    exams: list[ExamInfo]
+    exam: ExamInfo
 
 
 class TokenData(BaseModel):
-    exp: timedelta
+    exp: datetime
     id: str
     scopes: list[str] = []
 
@@ -194,6 +195,11 @@ class Salary(BaseModel):
 class JobCategoryInfo(BaseModel):
     slug: str
     title: str
+    discipline: str
+    expertise: str
+    min_salary: int
+    max_salary: int
+    guide: list["GuideItem"]
 
 
 class JobSchema(BaseModel):
@@ -234,12 +240,23 @@ class BranchInfo(BaseModel):
     expertise: list[str]
 
 
+class SkillsTimeline(BaseModel):
+    title: str
+    description: str
+    skill: SkillSchema
+    index: int
+
+
 class GuideSchema(BaseModel):
     slug: str
     title: str
     summary: str
-    branch: str
-    expertise: str
     basic: str
     advanced: str = None
-    skills: list[SkillSchema] = []
+    job_category: JobCategoryInfo
+    roadmap: list[SkillsTimeline] = []
+
+
+class CategoryPage(BaseModel):
+    meta: PaginationMeta
+    categories: JobCategoryInfo

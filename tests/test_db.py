@@ -62,7 +62,9 @@ class TestAddData:
         for job in JOBS:
             skills = []
             for skill_title in job["skills"]:
-                skill, c = Skill.get_or_create(title=skill_title)
+                skill, c = Skill.get_or_create(
+                    slug=slugify(skill_title), title=skill_title
+                )
                 skills.append(skill.slug)
             job["skills"] = skills
 
@@ -70,8 +72,13 @@ class TestAddData:
     def test_add_personalities(self):
         for job in JOBS:
             category = job["category"]
+            slugs = []
             for persona in category["personalities"]:
-                personality, _ = Personality.get_or_create(slug=persona)
+                personality, _ = Personality.get_or_create(
+                    slug=slugify("mbti-" + persona), test="MBTI", model=persona
+                )
+                slugs.append(personality.slug)
+            category["personalities"] = slugs
 
     @pytest.mark.run(order=2)
     def test_add_category(self):
@@ -80,7 +87,7 @@ class TestAddData:
             personalities = category["personalities"]
             del category["personalities"]
             category["slug"] = slugify(category["title"])
-            c = JobCategory.get_or_none(JobCategory.slug == slugify(category["title"]))
+            c = JobCategory.get_or_none(JobCategory.slug == category["slug"])
             if not c:
                 c = JobCategory.create(**category)
                 for persona in personalities:
@@ -98,8 +105,8 @@ class TestAddData:
             guide["job_category"] = category.slug
 
     @pytest.mark.run(order=4)
-    def test_add_employer(self):
-        for i, employer in enumerate(employers):
+    def test_add_users(self):
+        for i, employer in enumerate(employers, 1):
             user = User.create(
                 email=f"example{i}@example.com",
                 phone_number=f"091234567{i:02d}",
@@ -109,9 +116,25 @@ class TestAddData:
             user.employer = Employer.create(
                 co_name=employer["name"], city=choice(CITIES)
             )
+            user.save()
+        for i, (firstname, lastname, personality) in enumerate(SEEKERS, i + 1):
+            user = User.create(
+                email=f"example{i}@example.com",
+                phone_number=f"091234567{i:02d}",
+                pass_hash=User.hash_password(f"password{i}"),
+                role=Role.seeker,
+            )
+            seeker = Seeker.create(
+                firstname=firstname,
+                lastname=lastname,
+            )
+            seeker.personalities.add(
+                Personality.get_by_id(slugify("mbti-" + personality))
+            )
+            user.seeker = seeker
+            user.save()
 
     @pytest.mark.run(order=5)
-    @pytest.mark.run(order=3)
     def test_add_job(self):
         emp = [e for e in Employer.select()]
         for i in range(123):

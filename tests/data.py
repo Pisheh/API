@@ -616,3 +616,19 @@ GUIDES = [
         "job_category": "مهندسی",
     },
 ]
+
+__discipline__ = set()
+DISCIPLINES = []
+for j in JOBS:
+    j = j["category"]
+    if j["discipline"] in __discipline__:
+        DISCIPLINES[j["discipline"]]["expertise"].add(j["expertise"])
+    else:
+        DISCIPLINES.append(dict(name=j["discipline"], expertise={j["expertise"]}))
+
+SEEKERS = [
+    ("جعفر", "عسکری", "ENFP"),
+    ("بهنام", "سیم‌جو", "ESTJ"),
+    ("ناصر", "کریمی‌زاده", "ISTP"),
+    ("فاروق", "خلیلی", "ENTJ"),
+]
