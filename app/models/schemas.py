@@ -45,15 +45,48 @@ class PhoneNumber(str):
         return f"PhoneNumber({super().__repr__()})"
 
 
+class Username(str):
+    email_pattern = re.compile(
+        r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+    )
+    phone_pattern = re.compile(r"09(\d{9})")
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(
+            examples=["09123456721", "example21@example.com"],
+        )
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, str):
+            raise TypeError("string required")
+        email_match = cls.email_pattern.fullmatch(v)
+        phone_match = cls.phone_pattern.fullmatch(v)
+
+        if email_match or phone_match:
+            return v
+        else:
+            raise ValueError("invalid format")
+
+    def __repr__(self):
+        return f"Username({super().__repr__()})"
+
+
 class UserQuery(BaseModel):
-    email: EmailStr = None
-    phone_number: PhoneNumber = None
+    username: Username
 
 
 class LoginInfo(BaseModel):
-    email: EmailStr | None = None
-    phone_number: PhoneNumber | None = None
-    password: str
+    username: Username = Field(
+        example="email:example21@example.com",
+        description="username that starts with `email:` or `phone:`, E.g: `phone:09123456721`",
+    )
+    password: str = Field(example="password21")
 
 
 class UserQueryResult(BaseModel):
@@ -66,7 +99,7 @@ class UserQueryResult(BaseModel):
 class EmployerInfo(BaseModel):
     co_name: str
     city: str
-    avatar: str
+    avatar: str | None
 
 
 # JobSchema = ForwardRef("JobSchema")
@@ -197,9 +230,9 @@ class JobCategoryInfo(BaseModel):
     title: str
     discipline: str
     expertise: str
-    min_salary: int
-    max_salary: int
-    guide: list["GuideItem"]
+    min_salary: int | None
+    max_salary: int | None
+    guides: list["GuideItem"] = []
 
 
 class JobSchema(BaseModel):

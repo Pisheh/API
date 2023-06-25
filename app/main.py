@@ -11,6 +11,7 @@ from logging import getLogger
 
 from app.routers import guidance, jobs, me, literals, category
 from app.models.schemas import (
+    Username,
     UserQuery,
     UserQueryResult,
     UserSchema,
@@ -100,14 +101,15 @@ async def cron_jobs():
     await expire_jobs()
 
 
-@app.post("/user")
-async def get_user(user: UserQuery) -> UserQueryResult:
+async def get_user(username) -> User:
     try:
-        result: User = None
-        if user.email:
-            result = User.get(User.email == user.email)
-        elif user.number:
-            result = User.get(User.number == user.number)
+        result: User
+        email_match = Username.email_pattern.fullmatch(username)
+        phone_match = Username.phone_pattern.fullmatch(username)
+        if email_match:
+            result = User.get(User.email == username)
+        elif phone_match:
+            result = User.get(User.phone_number == phone_match[1])
         else:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST, "send email or phone number"
@@ -116,9 +118,33 @@ async def get_user(user: UserQuery) -> UserQueryResult:
         if result.disabled:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "user.disabled")
 
-        return result.to_schema(UserQueryResult)
+        return result
     except DoesNotExist:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "user.not_found")
+
+
+@app.post("/user")
+async def check_user(login_info: UserQuery) -> UserQueryResult:
+    result = await get_user(login_info.username)
+    if result.role == Role.employer:
+        return UserQueryResult(co_name=result.employer.co_name, role=Role.employer)
+    elif result.role == Role.seeker:
+        return UserQueryResult(
+            firstname=result.seeker.firstname,
+            lastname=result.seeker.lastname,
+            role=Role.seeker,
+        )
+
+
+@app.post("/login")
+async def login(login_info: LoginInfo) -> LoginResult:
+    user = await get_user(login_info.username)
+
+    if user and user.verify_password(login_info.password):
+        return LoginResult(
+            token=create_access_token(user), user_info=user.to_schema(UserSchema)
+        )
+    raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
 
 
 @app.post("/signup")
@@ -141,24 +167,6 @@ async def signup(signup_info: SignupInfo) -> UserSchema:
         return user.to_schema(UserSchema)
     except IntegrityError:
         raise HTTPException(status.HTTP_409_CONFLICT, "user.exists")
-
-
-@app.post("/login")
-async def login(login_info: LoginInfo) -> LoginResult:
-    try:
-        user: User
-        if login_info.email:
-            user = User.get(User.email == login_info.email)
-        elif login_info.phone_number:
-            user = User.get(User.phone_number == login_info.phone_number)
-
-        if user and user.verify_password(login_info.password):
-            return LoginResult(
-                token=create_access_token(user), user_info=user.to_schema(UserSchema)
-            )
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
-    except DoesNotExist:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "user.not_found")
 
 
 if __name__ == "__main__":

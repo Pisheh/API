@@ -373,21 +373,6 @@ class ExamProcess(BaseModel):
 
 @add_table
 class Job(BaseModel):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        if (
-            self.category.min_salary is None
-            or self.min_salary < self.category.min_salary
-        ):
-            self.category.min_salary = self.min_salary
-            self.category.save(only=[JobCategory.min_salary])
-        if (
-            self.category.max_salary is None
-            or self.max_salary < self.category.max_salary
-        ):
-            self.category.max_salary = self.max_salary
-            self.category.save(only=[JobCategory.max_salary])
-
     title = CharField()
     description = TextField()
     requirements = JsonField()
