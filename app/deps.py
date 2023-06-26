@@ -56,7 +56,8 @@ async def get_current_user(
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
         token_data = TokenData(**payload)
-        if datetime.fromtimestamp(token_data.exp) < datetime.now():
+        timezone = token_data.exp.tzinfo
+        if token_data.exp < datetime.now(timezone):
             raise credentials_exception
         user = User.get_by_id(token_data.id)
         if user.disabled:
