@@ -150,7 +150,7 @@ class SignupInfo(BaseModel):
 
 
 class LoginResult(BaseModel):
-    token: str
+    access_token: str
     user_info: UserSchema
 
 

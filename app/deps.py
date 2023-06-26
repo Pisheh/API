@@ -13,7 +13,6 @@ from app.models.schemas import TokenData
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/login",
-    scheme_name="JWT",
     scopes={
         "employer": "Get access to employers panel",
         "seeker": "Get access to seekers panel",

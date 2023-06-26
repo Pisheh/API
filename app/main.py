@@ -1,14 +1,15 @@
-from fastapi import FastAPI, status, Request, HTTPException, status
+from fastapi import FastAPI, status, Request, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_utils.tasks import repeat_every
 import uvicorn
 from peewee import SqliteDatabase, IntegrityError, DoesNotExist
 from datetime import datetime, timedelta
 from logging import getLogger
-
+from typing import Annotated
 from app.routers import guidance, jobs, me, literals, category
 from app.models.schemas import (
     Username,
@@ -137,12 +138,15 @@ async def check_user(login_info: UserQuery) -> UserQueryResult:
 
 
 @app.post("/login")
-async def login(login_info: LoginInfo) -> LoginResult:
+async def login(
+    login_info: Annotated[OAuth2PasswordRequestForm, Depends()]
+) -> LoginResult:
     user = await get_user(login_info.username)
 
     if user and user.verify_password(login_info.password):
         return LoginResult(
-            token=create_access_token(user), user_info=user.to_schema(UserSchema)
+            access_token=create_access_token(user),
+            user_info=user.to_schema(UserSchema),
         )
     raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
 
