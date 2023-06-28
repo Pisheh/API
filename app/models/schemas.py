@@ -97,6 +97,7 @@ class UserQueryResult(BaseModel):
 
 
 class EmployerInfo(BaseModel):
+    id: str
     co_name: str
     city: str
     avatar: str | None
@@ -113,8 +114,11 @@ class PersonalitySchema(BaseModel):
 
 class EmployerSchema(BaseModel):
     co_name: str
+    co_address: str
+    co_phones: str
+    co_ver_code: str
     city: str
-    jobs: list["JobSchema"]
+    avatar: str | None = None
 
 
 class SkillItem(BaseModel):
@@ -127,7 +131,6 @@ class SeekerInfo(BaseModel):
     firstname: str
     lastname: str
     skills: list[SkillItem] = None
-    personalities: list[PersonalitySchema]
 
 
 class UserSchema(BaseModel):
@@ -151,7 +154,7 @@ class SignupInfo(BaseModel):
 
 class LoginResult(BaseModel):
     access_token: str
-    user_info: UserSchema
+    user_info: UserQueryResult
 
 
 class Answer(BaseModel):
@@ -197,12 +200,6 @@ class SkillSchema(BaseModel):
     exam: ExamInfo
 
 
-class TokenData(BaseModel):
-    exp: datetime
-    id: str
-    scopes: list[str] = []
-
-
 class TimeDelta(BaseModel):
     unit: Literal[
         "مدت‌ها پیش",
@@ -225,7 +222,7 @@ class Salary(BaseModel):
     max: int
 
 
-class JobCategoryInfo(BaseModel):
+class JobCategorySchema(BaseModel):
     slug: str
     title: str
     discipline: str
@@ -233,6 +230,13 @@ class JobCategoryInfo(BaseModel):
     min_salary: int | None
     max_salary: int | None
     guides: list["GuideItem"] = []
+
+
+class PaginationMeta(BaseModel):
+    total_count: PositiveInt
+    page_count: PositiveInt
+    current_page: PositiveInt
+    per_page: PositiveInt
 
 
 class JobSchema(BaseModel):
@@ -245,17 +249,9 @@ class JobSchema(BaseModel):
     requirements: list[str]
     skills: list[SkillItem]
     timedelta: TimeDelta
-    category: JobCategoryInfo
-
-
-# JobSchema.update_forward_refs()
-
-
-class PaginationMeta(BaseModel):
-    total_count: PositiveInt
-    page_count: PositiveInt
-    current_page: PositiveInt
-    per_page: PositiveInt
+    category: JobCategorySchema
+    type: str = Field(example="تمام وقت")
+    day_time: str = Field(example="شنبه تا چهارشنبه ۸ الی ۱۴")
 
 
 class JobsPage(BaseModel):
@@ -286,10 +282,10 @@ class GuideSchema(BaseModel):
     summary: str
     basic: str
     advanced: str = None
-    job_category: JobCategoryInfo
+    job_category: JobCategorySchema
     roadmap: list[SkillsTimeline] = []
 
 
 class CategoryPage(BaseModel):
     meta: PaginationMeta
-    categories: JobCategoryInfo
+    categories: list[JobCategorySchema]

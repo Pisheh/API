@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Depends, Path, HTTPException
+from fastapi import APIRouter, Query, Depends, Path, HTTPException, status
 from typing import Annotated, Any, Literal
 from app.models.dbmodel import User, JobCategory, Job, TABLES, Personality, Seeker
 from app.models.schemas import (
@@ -6,7 +6,7 @@ from app.models.schemas import (
     JobSchema,
     PaginationMeta,
     CategoryPage,
-    JobCategoryInfo,
+    JobCategorySchema,
 )
 from app.deps import get_user_or_none, Scopes
 from math import ceil
@@ -44,6 +44,26 @@ async def get_categories(
         if personality >> seeker.personalities:
             q &= personality >> JobCategory.personalities
 
+    count = JobCategory.select().where(q).count()
+    if count == 0:
+        raise HTTPException(status.HTTP_204_NO_CONTENT)
+    pages_count = ceil(count / per_page)
+    if page <= pages_count:
+        return CategoryPage(
+            meta=PaginationMeta(
+                total_count=count,
+                current_page=page,
+                page_count=pages_count,
+                per_page=per_page,
+            ),
+            categories=[
+                j.to_schema(JobCategorySchema)
+                for j in JobCategory.select().where(q).paginate(page, per_page)
+            ],
+        )
+    else:
+        HTTPException(400, "jobs.bad_pagination")
+
 
 @router.get("/{slug}/jobs")
 async def get_category_jobs(
@@ -77,3 +97,11 @@ async def get_category_jobs(
             HTTPException(400, "jobs.bad_pagination")
     except DoesNotExist:
         HTTPException(404)
+
+
+@router.get("/{slug}")
+def get_category(slug: Annotated[str, Path()]):
+    try:
+        return JobCategory.get_by_id(slug).to_schema(JobCategorySchema)
+    except DoesNotExist:
+        raise HTTPException(status_code=404)

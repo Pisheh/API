@@ -26,6 +26,12 @@ async def get_me(
     return current_user.to_schema(UserSchema)
 
 
+@router.delete("/")
+async def logout(current_user: Annotated[User, Security(get_current_user)]):
+    current_user.logged_in = False
+    current_user.save()
+
+
 @router.get("/personlities")
 async def get_personlities(
     current_user: Annotated[

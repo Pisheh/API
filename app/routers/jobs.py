@@ -14,8 +14,10 @@ async def get_jobs(
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(le=100, ge=1)] = 10,
 ) -> JobsPage:
-    jobs_count = Job.select(Job.expired == False).count()
-    pages_count = ceil(jobs_count / per_page)
+    count = Job.select(Job.expired == False).count()
+    if count == 0:
+        raise HTTPException(status.HTTP_204_NO_CONTENT)
+    pages_count = ceil(count / per_page)
     if page <= pages_count:
         jobs: list[JobSchema] = []
         for job in (
@@ -27,7 +29,7 @@ async def get_jobs(
             jobs.append(job.to_schema(JobSchema))
         return JobsPage(
             meta=PaginationMeta(
-                total_count=jobs_count,
+                total_count=count,
                 current_page=page,
                 page_count=pages_count,
                 per_page=per_page,

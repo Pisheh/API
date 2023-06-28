@@ -16,12 +16,14 @@ async def get_guides(
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(le=100, ge=1)] = 10,
 ) -> GuidesPage:
-    guides_count = Guide.select().count()
-    pages_count = ceil(guides_count / per_page)
+    count = Guide.select().count()
+    if count == 0:
+        raise HTTPException(status.HTTP_204_NO_CONTENT)
+    pages_count = ceil(count / per_page)
     if page <= pages_count:
         return GuidesPage(
             meta=PaginationMeta(
-                total_count=guides_count,
+                total_count=count,
                 current_page=page,
                 page_count=pages_count,
                 per_page=per_page,

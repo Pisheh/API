@@ -144,9 +144,16 @@ async def login(
     user = await get_user(login_info.username)
 
     if user and user.verify_password(login_info.password):
+        user.logged_in = True
+        user.save()
         return LoginResult(
             access_token=create_access_token(user),
-            user_info=user.to_schema(UserSchema),
+            user_info=UserQueryResult(
+                firstname=user.seeker.firstname if user.role == Role.seeker else None,
+                lastname=user.seeker.firstname if user.role == Role.seeker else None,
+                co_name=user.employer.co_name if user.role == Role.employer else None,
+                role=user.role,
+            ),
         )
     raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
 
@@ -156,7 +163,7 @@ async def signup(signup_info: SignupInfo) -> UserSchema:
     if not (signup_info.employer or signup_info.seeker):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            "SignupInfo.employer of SignupInfo.seeker missed",
+            "SignupInfo.employer or SignupInfo.seeker missed",
         )
     try:
         user = User.create(

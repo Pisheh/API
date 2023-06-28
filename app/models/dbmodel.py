@@ -112,6 +112,7 @@ class BaseModel(Model):
 
     class Meta:
         database = database_proxy
+        only_save_dirty = True
 
     def to_schema(
         self, type_: pydantic.BaseModel = DEFAULT, **kwargs
@@ -251,6 +252,10 @@ class Employer(BaseModel):
     def avatar(self):
         return self.account.avatar
 
+    @property
+    def id(self):
+        return self.account.id
+
     # jobs < Job.employer
     # account - User.employer
 
@@ -296,6 +301,8 @@ class User(BaseModel):
     disabled = BooleanField(default=False)
     seeker = ForeignKeyField(Seeker, backref="account_set", null=True)
     employer = ForeignKeyField(Employer, backref="account_set", null=True)
+    logged_in = BooleanField(default=False)
+    visible = BooleanField(default=True)
 
     def verify_password(self, password):
         return check_password_hash(self.pass_hash, password)
@@ -384,6 +391,8 @@ class Job(BaseModel):
     expire_on = DateTimeField()
     expired = BooleanField(False, default=False)
     employer = ForeignKeyField(Employer, backref="jobs")
+    day_time = CharField(40)
+    type = CharField(40)
 
     # requests < JobRequests.job
 

@@ -158,6 +158,8 @@ class TestAddData:
                 min_salary=min_salary,
                 max_salary=max_salary,
                 category=JobCategory.get(JobCategory.slug == slugify(job["category"])),
+                type=choice(("تمام وقت", "پاره وقت")),
+                day_time="شنبه تا چهارشنبه ۸ الی ۱۴",
             )
             for skill in job["skills"]:
                 j.skills.add(Skill.get_by_id(skill))

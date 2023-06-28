@@ -5,10 +5,12 @@ from jose import jwt
 from fastapi.middleware import Middleware
 from app.models.dbmodel import User
 from app.models.schemas import TokenData
+from pydantic import BaseModel
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
-REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+ACCESS_TOKEN_EXPIRE_TIME = timedelta(hours=12)
+REFRESH_TOKEN_EXPIRE_TIME = timedelta(days=3)
+
 ALGORITHM = "HS256"
 JWT_SECRET_KEY = os.environ.get(
     "JWT_SECRET_KEY", "a not secure secret key because I needed it in github action"
@@ -19,16 +21,44 @@ JWT_REFRESH_SECRET_KEY = os.environ.get(
 )  # should be kept secret
 
 
+class AccessTokenData(BaseModel):
+    id: str
+    password: str
+    exp: datetime
+    scopes: list[str] = []
+
+
+class RefreshTokenData(BaseModel):
+    id: str
+    exp: datetime
+
+
 def create_access_token(user: User, expires_delta: timedelta = None) -> str:
     if expires_delta is not None:
         expires_delta = datetime.utcnow() + expires_delta
     else:
-        expires_delta = datetime.utcnow() + timedelta(
-            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        expires_delta = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_TIME)
     encoded_jwt = jwt.encode(
-        TokenData(exp=expires_delta, id=user.id, scopes=[user.role.value, "me"]).dict(),
+        AccessTokenData(
+            id=user.id,
+            password=user.pass_hash,
+            exp=expires_delta,
+            scopes=[user.role.value, "me"],
+        ).dict(),
         JWT_SECRET_KEY,
+        ALGORITHM,
+    )
+    return encoded_jwt
+
+
+def create_refresh_token(user: User, expires_delta: timedelta = None) -> str:
+    if expires_delta is not None:
+        expires_delta = datetime.utcnow() + expires_delta
+    else:
+        expires_delta = datetime.utcnow() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_TIME)
+    encoded_jwt = jwt.encode(
+        RefreshTokenData(exp=expires_delta, id=user.id).dict(),
+        JWT_REFRESH_SECRET_KEY,
         ALGORITHM,
     )
     return encoded_jwt
