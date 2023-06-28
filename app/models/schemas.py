@@ -197,7 +197,7 @@ class SkillSchema(BaseModel):
     title: str
     description: str = None
     courses: list[CourseSchema]
-    exam: ExamInfo
+    exam: ExamInfo | None
 
 
 class TimeDelta(BaseModel):
@@ -282,7 +282,7 @@ class GuideSchema(BaseModel):
     summary: str
     basic: str
     advanced: str = None
-    job_category: JobCategorySchema
+    category: JobCategorySchema
     roadmap: list[SkillsTimeline] = []
 
 

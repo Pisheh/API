@@ -79,13 +79,26 @@ async def get_current_user(
         raise credentials_exception
 
 
-def get_user_or_none(
-    security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)]
-):
-    if not token:
-        return None
+class get_user_or_none:
+    def __init__(self, scopes: list | None = None):
+        self.scopes = scopes
 
-    try:
-        return get_current_user(security_scopes, token)
-    except:
-        return None
+    def __call__(self, token: Annotated[str, Depends(optional_oauth2_scheme)] = None):
+        if not token:
+            return None
+
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+            token_data = AccessTokenData(**payload)
+            if datetime.fromtimestamp(token_data.exp) < datetime.now():
+                return None
+            user = User.get_by_id(token_data.id)
+            if user.disabled:
+                return None
+            if self.scopes:
+                for scope in self.scopes:
+                    if scope not in token_data.scopes:
+                        return None
+            return user
+        except (JWTError, ValidationError, DoesNotExist):
+            return None

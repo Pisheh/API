@@ -3,7 +3,7 @@ import peewee
 from playhouse.shortcuts import model_to_dict
 from passlib.hash import pbkdf2_sha256
 from enum import Enum
-from typing import Any, Sequence
+from typing import Union
 from hashlib import md5
 from peewee import callable_
 import datetime
@@ -32,14 +32,11 @@ class Default(object):
 
 DEFAULT = Default()
 
-HASH_LEN = 32
-
 
 def simphash(string: str) -> str:
     return md5(string.encode()).hexdigest()
 
 
-_clone_set = lambda s: set(s) if s else set()
 _default = lambda arg, value: value if arg is DEFAULT else arg
 
 
@@ -100,15 +97,15 @@ class BaseModel(Model):
 
     def __init__(self, *args, **kwargs) -> None:
         if "slug" in self._meta.fields and "slug" not in kwargs:
-            slug = self.slugify(**kwargs)
+            slug = self.slugify(self._meta.fields["slug"].max_length, **kwargs)
             if slug:
                 kwargs["slug"] = slug
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def slugify(cls, **kwargs) -> str:
+    def slugify(cls, max_len, **kwargs) -> str:
         if "title" in kwargs:
-            return slugify(kwargs["title"])
+            return slugify(kwargs["title"], max_length=max_len)
 
     class Meta:
         database = database_proxy
@@ -156,7 +153,7 @@ def add_table(model: Model):
 
 @add_table
 class JobCategory(BaseModel):
-    slug = FixedCharField(64, primary_key=True)
+    slug = FixedCharField(100, primary_key=True)
     title = CharField()
     discipline = CharField()
     expertise = CharField()
@@ -178,7 +175,7 @@ class JobCategory(BaseModel):
 
 @add_table
 class Guide(BaseModel):
-    slug = FixedCharField(64, primary_key=True)
+    slug = FixedCharField(100, primary_key=True)
     title = CharField()
     summary = CharField(null=True)
     basic = TextField()
@@ -197,14 +194,14 @@ class Guide(BaseModel):
 class Skill(BaseModel):
     _default_schema_ = SkillItem
 
-    slug = FixedCharField(64, primary_key=True)
+    slug = FixedCharField(100, primary_key=True)
     title = CharField()
     description = CharField(null=True)
     exam_scores = JsonField(null=True)
 
     @property
-    def exam(self) -> "Exam":
-        return self.exams.get()
+    def exam(self) -> Union["Exam", None]:
+        return self.exams.get_or_none()
 
     @exam.setter
     def exam(self, value):
@@ -219,14 +216,12 @@ class Skill(BaseModel):
 
 @add_table
 class Course(BaseModel):
-    slug = FixedCharField(64, primary_key=True)
+    slug = FixedCharField(100, primary_key=True)
     title = CharField()
     description = CharField()
     link = CharField()
-    clicks = IntegerField()
-    guide = ForeignKeyField(Guide, backref="courses")
+    clicks = IntegerField(default=0)
     skill = ForeignKeyField(Skill, backref="courses")
-    index = IntegerField()
 
 
 @add_table
@@ -462,9 +457,9 @@ class Personality(BaseModel):
     job_categories = ManyToManyField(JobCategory, "personalities")
 
     @classmethod
-    def slugify(cls, **kwargs):
+    def slugify(cls, max_len, **kwargs):
         if "test" in kwargs and "model" in kwargs:
-            return slugify(kwargs["test"] + "-" + kwargs["model"])
+            return slugify(kwargs["test"] + "-" + kwargs["model"], max_length=max_len)
 
 
 @add_table

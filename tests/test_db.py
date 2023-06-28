@@ -66,6 +66,16 @@ class TestAddData:
                     slug=slugify(skill_title), title=skill_title
                 )
                 skills.append(skill.slug)
+
+                if c:
+                    for i in range(randint(1, 10)):
+                        Course.create(
+                            title=f"دوره یادگیری «{skill.title}» ({i})",
+                            description="لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم",
+                            link="https://pcworms.ir/",
+                            skill=skill,
+                        )
+
             job["skills"] = skills
 
     @pytest.mark.run(order=1)
@@ -164,3 +174,26 @@ class TestAddData:
             for skill in job["skills"]:
                 j.skills.add(Skill.get_by_id(skill))
             j.save()
+
+    @pytest.mark.run(order=6)
+    def test_add_guidance(self):
+        for category in JobCategory.select().order_by(fn.Random()):
+            for i in range(randint(1, 3)):
+                guide = Guide.create(
+                    title=f"راهنمای هدایت شغلی برای {category.title} - ({i})",
+                    summary=f"این راهنما شما را برای مسیر موفقیت در شغل {category.title} کمک می‌کند",
+                    basic=PERSIAN_LOREM,
+                    advanced=PERSIAN_LOREM * 3,
+                    category=category,
+                )
+
+                for i, skill in enumerate(
+                    Skill.select().order_by(fn.Random()).limit(randint(3, 15))
+                ):
+                    sti = SkillTimeline.create(
+                        title=f"یادگیری {skill.title}",
+                        description=f"لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم",
+                        skill=skill,
+                        index=i,
+                        guide=guide,
+                    )

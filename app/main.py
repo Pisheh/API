@@ -10,7 +10,7 @@ from peewee import SqliteDatabase, IntegrityError, DoesNotExist
 from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Annotated
-from app.routers import guidance, jobs, me, literals, category
+from app.routers import guidance, jobs, me, literals, category, courses, users
 from app.models.schemas import (
     Username,
     UserQuery,
@@ -29,6 +29,8 @@ app.include_router(guidance.router, prefix="/guidances", tags=["Guidance"])
 app.include_router(jobs.router, prefix="/jobs", tags=["Jobs"])
 app.include_router(category.router, prefix="/category", tags=["JobCategory"])
 app.include_router(literals.router, prefix="/literals", tags=["Literals"])
+app.include_router(courses.router, prefix="/courses", tags=["Courses"])
+app.include_router(users.router, prefix="/users", tags=["Other users info"])
 
 db_ = SqliteDatabase(".testdb.sqlite")
 database_proxy.initialize(db_)

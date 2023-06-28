@@ -1,10 +1,7 @@
 import os
 from datetime import datetime, timedelta
-from typing import Union, Any
 from jose import jwt
-from fastapi.middleware import Middleware
 from app.models.dbmodel import User
-from app.models.schemas import TokenData
 from pydantic import BaseModel
 
 
