@@ -154,6 +154,7 @@ class SignupInfo(BaseModel):
 
 class LoginResult(BaseModel):
     access_token: str
+    # refresh: str
     user_info: UserQueryResult
 
 
@@ -289,3 +290,14 @@ class GuideSchema(BaseModel):
 class CategoryPage(BaseModel):
     meta: PaginationMeta
     categories: list[JobCategorySchema]
+
+
+class JobRequestSchema(BaseModel):
+    id: int
+    job: JobSchema
+    expire_on: datetime
+
+
+class JobRequestPage(BaseModel):
+    meta: PaginationMeta
+    requests: list[JobRequestSchema]

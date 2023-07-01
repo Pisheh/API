@@ -12,6 +12,7 @@ from app.models.dbmodel import User
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/login",
+    scheme_name="JWT",
     scopes={
         "employer": "Get access to employers panel",
         "seeker": "Get access to seekers panel",
@@ -59,7 +60,7 @@ async def get_current_user(
         user = User.get_by_id(token_data.id)
         if not user.logged_in:
             raise credentials_exception
-        if user.pass_hash != payload.pass_hash or token_data.exp < datetime.now(
+        if user.pass_hash != token_data.pass_hash or token_data.exp < datetime.now(
             timezone
         ):
             user.logged_in = False

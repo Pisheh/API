@@ -16,7 +16,7 @@ router = APIRouter()
     response_class=RedirectResponse,
     response_description="Redirect to course link",
 )
-def get_course(slug: Annotated[str, Path]):
+async def get_course(slug: Annotated[str, Path]):
     try:
         course = Course.get_by_id(slug)
         course.clicks += 1

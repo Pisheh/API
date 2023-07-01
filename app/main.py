@@ -10,7 +10,16 @@ from peewee import SqliteDatabase, IntegrityError, DoesNotExist
 from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Annotated
-from app.routers import guidance, jobs, me, literals, category, courses, users
+from app.routers import (
+    guidance,
+    jobs,
+    me,
+    literals,
+    category,
+    courses,
+    users,
+    jobrequest,
+)
 from app.models.schemas import (
     Username,
     UserQuery,
@@ -21,7 +30,7 @@ from app.models.schemas import (
     SignupInfo,
 )
 from app.models.dbmodel import Seeker, Employer, User, Role, Job, database_proxy
-from app.utils import create_access_token
+from app.utils import create_access_token, create_refresh_token
 
 app = FastAPI()
 app.include_router(me.router, prefix="/me", tags=["User profile"])
@@ -31,6 +40,7 @@ app.include_router(category.router, prefix="/category", tags=["JobCategory"])
 app.include_router(literals.router, prefix="/literals", tags=["Literals"])
 app.include_router(courses.router, prefix="/courses", tags=["Courses"])
 app.include_router(users.router, prefix="/users", tags=["Other users info"])
+app.include_router(jobrequest.router, prefix="/requests", tags=["Job Request"])
 
 db_ = SqliteDatabase(".testdb.sqlite")
 database_proxy.initialize(db_)
@@ -140,16 +150,15 @@ async def check_user(login_info: UserQuery) -> UserQueryResult:
 
 
 @app.post("/login")
-async def login(
-    login_info: Annotated[OAuth2PasswordRequestForm, Depends()]
-) -> LoginResult:
+async def login(login_info: Annotated[OAuth2PasswordRequestForm, Depends()]):
     user = await get_user(login_info.username)
 
     if user and user.verify_password(login_info.password):
         user.logged_in = True
         user.save()
-        return LoginResult(
+        return dict(
             access_token=create_access_token(user),
+            refresh_token=create_refresh_token(user),
             user_info=UserQueryResult(
                 firstname=user.seeker.firstname if user.role == Role.seeker else None,
                 lastname=user.seeker.firstname if user.role == Role.seeker else None,

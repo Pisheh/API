@@ -439,14 +439,6 @@ class JobRequest(BaseModel):
     expire_on = DateTimeField(default=datetime.datetime.now)
     expired = BooleanField(False, default=False)
 
-    @classmethod
-    def get(cls, *query, **filters):
-        res = super().get(*query, **filters)
-        if res.expire_on <= datetime.datetime.now():
-            res.expired = True
-
-        return res
-
 
 @add_table
 class Personality(BaseModel):

@@ -100,7 +100,7 @@ async def get_category_jobs(
 
 
 @router.get("/{slug}")
-def get_category(slug: Annotated[str, Path()]):
+async def get_category(slug: Annotated[str, Path()]):
     try:
         return JobCategory.get_by_id(slug).to_schema(JobCategorySchema)
     except DoesNotExist:

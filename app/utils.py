@@ -20,7 +20,7 @@ JWT_REFRESH_SECRET_KEY = os.environ.get(
 
 class AccessTokenData(BaseModel):
     id: str
-    password: str
+    pass_hash: str
     exp: datetime
     scopes: list[str] = []
 
@@ -34,11 +34,11 @@ def create_access_token(user: User, expires_delta: timedelta = None) -> str:
     if expires_delta is not None:
         expires_delta = datetime.utcnow() + expires_delta
     else:
-        expires_delta = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_TIME)
+        expires_delta = datetime.utcnow() + ACCESS_TOKEN_EXPIRE_TIME
     encoded_jwt = jwt.encode(
         AccessTokenData(
             id=user.id,
-            password=user.pass_hash,
+            pass_hash=user.pass_hash,
             exp=expires_delta,
             scopes=[user.role.value, "me"],
         ).dict(),
@@ -52,7 +52,7 @@ def create_refresh_token(user: User, expires_delta: timedelta = None) -> str:
     if expires_delta is not None:
         expires_delta = datetime.utcnow() + expires_delta
     else:
-        expires_delta = datetime.utcnow() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_TIME)
+        expires_delta = datetime.utcnow() + REFRESH_TOKEN_EXPIRE_TIME
     encoded_jwt = jwt.encode(
         RefreshTokenData(exp=expires_delta, id=user.id).dict(),
         JWT_REFRESH_SECRET_KEY,

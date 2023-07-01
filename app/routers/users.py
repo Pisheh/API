@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/employer/{id}")
-def get_user_info(id: Annotated[str, Path]) -> EmployerSchema:
+async def get_user_info(id: Annotated[str, Path]) -> EmployerSchema:
     try:
         user = User.get_by_id(id)
         if user.role == Role.employer and user.visible and not user.disabled:

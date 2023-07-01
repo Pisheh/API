@@ -14,7 +14,7 @@ async def get_jobs(
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(le=100, ge=1)] = 10,
 ) -> JobsPage:
-    count = Job.select(Job.expired == False).count()
+    count = Job.select().where(Job.expired == False).count()
     if count == 0:
         raise HTTPException(status.HTTP_204_NO_CONTENT)
     pages_count = ceil(count / per_page)
