@@ -7,7 +7,13 @@ from pydantic import ValidationError
 from peewee import DoesNotExist
 from enum import Enum
 
-from app.utils import ALGORITHM, JWT_SECRET_KEY, AccessTokenData
+from app.utils import (
+    ALGORITHM,
+    JWT_SECRET_KEY,
+    JWT_REFRESH_SECRET_KEY,
+    AccessTokenData,
+    RefreshTokenData,
+)
 from app.models.dbmodel import User
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -48,6 +54,7 @@ async def get_current_user(
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     else:
         authenticate_value = "Bearer"
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -103,3 +110,36 @@ class get_user_or_none:
             return user
         except (JWTError, ValidationError, DoesNotExist):
             return None
+
+
+async def decode_refresh_token(token: str, refresh_token: str):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+    )
+    try:
+        token_data = AccessTokenData(
+            **jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+        )
+        refresh_token_data = RefreshTokenData(
+            **jwt.decode(refresh_token, JWT_REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
+        )
+        timezone = token_data.exp.tzinfo
+        if token_data.id == refresh_token_data.id:
+            user = User.get_by_id(token_data.id)
+        else:
+            raise credentials_exception
+        if not user.logged_in:
+            raise credentials_exception
+        if (
+            user.pass_hash != token_data.pass_hash
+            or refresh_token_data.exp < datetime.now(timezone)
+        ):
+            user.logged_in = False
+            user.save()
+            raise credentials_exception
+        if user.disabled:
+            raise HTTPException(status_code=400, detail="Inactive user")
+        return user
+    except (JWTError, ValidationError, DoesNotExist):
+        raise credentials_exception

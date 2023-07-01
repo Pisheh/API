@@ -30,7 +30,8 @@ from app.models.schemas import (
     SignupInfo,
 )
 from app.models.dbmodel import Seeker, Employer, User, Role, Job, database_proxy
-from app.utils import create_access_token, create_refresh_token
+from app.utils import create_access_token, create_refresh_token, RefreshTokenData
+from app.deps import decode_refresh_token
 
 app = FastAPI()
 app.include_router(me.router, prefix="/me", tags=["User profile"])
@@ -167,6 +168,20 @@ async def login(login_info: Annotated[OAuth2PasswordRequestForm, Depends()]):
             ),
         )
     raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
+
+
+@app.post("/token")
+async def refresh_token(user: Annotated[User, Depends(decode_refresh_token)]):
+    return dict(
+        access_token=create_access_token(user),
+        refresh_token=create_refresh_token(user),
+        user_info=UserQueryResult(
+            firstname=user.seeker.firstname if user.role == Role.seeker else None,
+            lastname=user.seeker.firstname if user.role == Role.seeker else None,
+            co_name=user.employer.co_name if user.role == Role.employer else None,
+            role=user.role,
+        ),
+    )
 
 
 @app.post("/signup")
