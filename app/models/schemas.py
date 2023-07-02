@@ -36,10 +36,10 @@ class PhoneNumber(str):
     def validate(cls, v):
         if not isinstance(v, str):
             raise TypeError("string required")
-        m = phone_num_re.fullmatch(v)
+        m = phone_num_re.fullmatch(str(v))
         if not m:
             raise ValueError("invalid phone number format")
-        return cls(m)
+        return str(m[0])
 
     def __repr__(self):
         return f"PhoneNumber({super().__repr__()})"
@@ -49,7 +49,7 @@ class Username(str):
     email_pattern = re.compile(
         r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
     )
-    phone_pattern = re.compile(r"09(\d{9})")
+    phone_pattern = re.compile(r"09\d{9}")
 
     @classmethod
     def __get_validators__(cls):
