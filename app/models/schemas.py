@@ -136,8 +136,6 @@ class SeekerInfo(BaseModel):
 class UserSchema(BaseModel):
     id: str
     avatar: str = None
-    email = EmailStr
-    phone_number = PhoneNumber
     role: Role
     employer: EmployerInfo | None = None
     seeker: SeekerInfo | None = None
@@ -153,8 +151,8 @@ class SignupInfo(BaseModel):
 
 
 class LoginResult(BaseModel):
-    access_token: str
-    # refresh: str
+    access_token: str = Field(alias="access_token")
+    refresh_token: str = Field(alias="refresh_token")
     user_info: UserQueryResult
 
 
@@ -295,6 +293,7 @@ class CategoryPage(BaseModel):
 class JobRequestSchema(BaseModel):
     id: int
     job: JobSchema
+    seeker: SeekerInfo
     expire_on: datetime
 
 

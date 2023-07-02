@@ -32,6 +32,7 @@ from app.models.schemas import (
 from app.models.dbmodel import Seeker, Employer, User, Role, Job, database_proxy
 from app.utils import create_access_token, create_refresh_token, RefreshTokenData
 from app.deps import decode_refresh_token
+from pydantic import BaseModel
 
 app = FastAPI()
 app.include_router(me.router, prefix="/me", tags=["User profile"])
@@ -151,13 +152,15 @@ async def check_user(login_info: UserQuery) -> UserQueryResult:
 
 
 @app.post("/login")
-async def login(login_info: Annotated[OAuth2PasswordRequestForm, Depends()]):
+async def login(
+    login_info: Annotated[OAuth2PasswordRequestForm, Depends()]
+) -> LoginResult:
     user = await get_user(login_info.username)
 
     if user and user.verify_password(login_info.password):
         user.logged_in = True
         user.save()
-        return dict(
+        return LoginResult(
             access_token=create_access_token(user),
             refresh_token=create_refresh_token(user),
             user_info=UserQueryResult(

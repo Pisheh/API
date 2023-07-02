@@ -437,7 +437,8 @@ class JobRequest(BaseModel):
     seeker = ForeignKeyField(Seeker, backref="job_requests")
     created_on = DateTimeField(default=datetime.datetime.now)
     expire_on = DateTimeField(default=datetime.datetime.now)
-    expired = BooleanField(False, default=False)
+    expired = BooleanField(default=False)
+    approved = BooleanField(default=False)
 
 
 @add_table

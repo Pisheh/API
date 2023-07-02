@@ -1,10 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, Security, Path
-from fastapi_utils.inferring_router import InferringRouter
-from fastapi_utils.cbv import cbv
+from fastapi import APIRouter, HTTPException, status, Path
 from app.models.schemas import EmployerSchema
-from app.models.dbmodel import Seeker, Employer, User, Role
+from app.models.dbmodel import User, Role
 from peewee import DoesNotExist
-from app.deps import get_current_user, Scopes
 from typing import Annotated
 
 router = APIRouter()
