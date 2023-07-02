@@ -11,3 +11,4 @@ uvicorn==0.22.0
 pydantic[email]
 python-slugify==8.0.1
 shortuuid==1.0.11
+python-multipart==0.0.6
