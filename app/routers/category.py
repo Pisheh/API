@@ -28,7 +28,7 @@ async def get_categories(
 ) -> Any:
     q = JobCategory.slug == JobCategory.slug
     if course:
-        q = JobCategory.discipline == course
+        q = JobCategory.course == course
         if expertise:
             q &= JobCategory.expertise == expertise
 

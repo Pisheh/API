@@ -155,7 +155,7 @@ def add_table(model: Model):
 class JobCategory(BaseModel):
     slug = FixedCharField(100, primary_key=True)
     title = CharField()
-    discipline = CharField()
+    course = CharField()
     expertise = CharField()
     min_salary = IntegerField(null=True)
     max_salary = IntegerField(null=True)

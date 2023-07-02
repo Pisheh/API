@@ -226,7 +226,7 @@ class Salary(BaseModel):
 class JobCategorySchema(BaseModel):
     slug: str
     title: str
-    discipline: str
+    course: str
     expertise: str
     min_salary: int | None
     max_salary: int | None

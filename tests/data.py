@@ -13,7 +13,7 @@ JOBS = [
         "max_salary": 5000000,
         "category": {
             "title": "فناوری اطلاعات",
-            "discipline": "توسعه وب",
+            "course": "توسعه وب",
             "expertise": "توسعه دهنده وب",
             "personalities": ["INTP", "ISTP"],
         },
@@ -38,7 +38,7 @@ JOBS = [
         "max_salary": 7000000,
         "category": {
             "title": "فناوری اطلاعات",
-            "discipline": "مهندسی نرم‌افزار",
+            "course": "مهندسی نرم‌افزار",
             "expertise": "مهندس نرم‌افزار",
             "personalities": ["INTJ", "ISTJ"],
         },
@@ -56,7 +56,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "مدیریت پروژه",
+            "course": "مدیریت پروژه",
             "expertise": "مدیر پروژه",
             "personalities": ["ENTJ", "ESTJ"],
         },
@@ -74,7 +74,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "هنر",
-            "discipline": "طراحی گرافیک",
+            "course": "طراحی گرافیک",
             "expertise": "طراح گرافیک",
             "personalities": ["INFP", "ISFP"],
         },
@@ -92,7 +92,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی معماری",
+            "course": "مهندسی معماری",
             "expertise": "مهندس معمار",
             "personalities": ["INFJ", "ISFJ"],
         },
@@ -110,7 +110,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "بازاریابی",
-            "discipline": "بازاریابی",
+            "course": "بازاریابی",
             "expertise": "بازاریاب",
             "personalities": ["ENFJ", "ESFJ"],
         },
@@ -128,7 +128,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی برق",
+            "course": "مهندسی برق",
             "expertise": "مهندس برق",
             "personalities": ["INTP", "ISTP"],
         },
@@ -147,7 +147,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "بازرگانی",
-            "discipline": "تجارت بین‌الملل",
+            "course": "تجارت بین‌الملل",
             "expertise": "متخصص تجارت بین‌الملل",
             "personalities": ["ENTP", "ESTP"],
         },
@@ -165,7 +165,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "منابع انسانی",
+            "course": "منابع انسانی",
             "expertise": "متخصص منابع انسانی",
             "personalities": ["ENFP", "ESFP"],
         },
@@ -183,7 +183,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی مکانیک",
+            "course": "مهندسی مکانیک",
             "expertise": "مهندس مکانیک",
             "personalities": ["INTJ", "ISTJ"],
         },
@@ -201,7 +201,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "فناوری اطلاعات",
-            "discipline": "تحلیل داده",
+            "course": "تحلیل داده",
             "expertise": "تحلیلگر داده",
             "personalities": ["INFJ", "ISFJ"],
         },
@@ -219,7 +219,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "فروش",
+            "course": "فروش",
             "expertise": "مدیر فروش",
             "personalities": ["ENTJ", "ESTJ"],
         },
@@ -237,7 +237,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "فناوری اطلاعات",
-            "discipline": "مهندسی نرم‌افزار",
+            "course": "مهندسی نرم‌افزار",
             "expertise": "مهندس نرم‌افزار",
             "personalities": ["INTP", "ISTP"],
         },
@@ -259,7 +259,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "بازرگانی",
-            "discipline": "بازرگانی",
+            "course": "بازرگانی",
             "expertise": "کارشناس بازرگانی",
             "personalities": ["ENFJ", "ESFJ"],
         },
@@ -277,7 +277,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی صنایع",
+            "course": "مهندسی صنایع",
             "expertise": "مهندس صنایع",
             "personalities": ["INFJ", "ISFJ"],
         },
@@ -295,7 +295,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "بازاریابی",
-            "discipline": "بازاریابی",
+            "course": "بازاریابی",
             "expertise": "کارشناس بازاریابی",
             "personalities": ["ENFP", "ESFP"],
         },
@@ -313,7 +313,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی برق",
+            "course": "مهندسی برق",
             "expertise": "مهندس برق",
             "personalities": ["INTP", "ISTP"],
         },
@@ -331,7 +331,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "پروژه",
+            "course": "پروژه",
             "expertise": "مدیر پروژه",
             "personalities": ["ENTJ", "ESTJ"],
         },
@@ -349,7 +349,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "معماری",
-            "discipline": "معماری داخلی",
+            "course": "معماری داخلی",
             "expertise": "معمار داخلی",
             "personalities": ["INFJ", "ISFJ"],
         },
@@ -367,7 +367,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "منابع انسانی",
+            "course": "منابع انسانی",
             "expertise": "کارشناس منابع انسانی",
             "personalities": ["ENFJ", "ESFJ"],
         },
@@ -385,7 +385,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی مکانیک",
+            "course": "مهندسی مکانیک",
             "expertise": "مهندس مکانیک",
             "personalities": ["INTP", "ISTP"],
         },
@@ -403,7 +403,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "فروش",
+            "course": "فروش",
             "expertise": "مدیر فروش",
             "personalities": ["ENTJ", "ESTJ"],
         },
@@ -421,7 +421,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "معماری",
-            "discipline": "معماری منظر",
+            "course": "معماری منظر",
             "expertise": "معمار منظر",
             "personalities": ["INFJ", "ISFJ"],
         },
@@ -439,7 +439,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "مالی",
+            "course": "مالی",
             "expertise": "مدیر مالی",
             "personalities": ["ENTJ", "ESTJ"],
         },
@@ -457,7 +457,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "روابط عمومی",
+            "course": "روابط عمومی",
             "expertise": "مدیر روابط عمومی",
             "personalities": ["ENFJ", "ESFJ"],
         },
@@ -475,7 +475,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی نرم‌افزار",
+            "course": "مهندسی نرم‌افزار",
             "expertise": "مهندس نرم‌افزار",
             "personalities": ["INTP", "ISTP"],
         },
@@ -493,7 +493,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "بازاریابی",
+            "course": "بازاریابی",
             "expertise": "مدیر بازاریابی",
             "personalities": ["ENTJ", "ESTJ"],
         },
@@ -511,7 +511,7 @@ JOBS = [
         "max_salary": 9000000,
         "category": {
             "title": "مالی",
-            "discipline": "مشاوره مالی",
+            "course": "مشاوره مالی",
             "expertise": "مشاور مالی",
             "personalities": ["INFJ", "ISFJ"],
         },
@@ -529,7 +529,7 @@ JOBS = [
         "max_salary": 8000000,
         "category": {
             "title": "مهندسی",
-            "discipline": "مهندسی برق",
+            "course": "مهندسی برق",
             "expertise": "مهندس برق",
             "personalities": ["INTP", "ISTP"],
         },
@@ -551,7 +551,7 @@ JOBS = [
         "max_salary": 12000000,
         "category": {
             "title": "مدیریت",
-            "discipline": "منابع انسانی",
+            "course": "منابع انسانی",
             "expertise": "مدیر منابع انسانی",
             "personalities": ["ENTJ", "ESTJ"],
         },
@@ -617,14 +617,14 @@ GUIDES = [
     },
 ]
 
-__discipline__ = set()
-DISCIPLINES = []
+__course__ = set()
+COURSES = []
 for j in JOBS:
     j = j["category"]
-    if j["discipline"] in __discipline__:
-        DISCIPLINES[j["discipline"]]["expertise"].add(j["expertise"])
+    if j["course"] in __course__:
+        COURSES[j["course"]]["expertise"].add(j["expertise"])
     else:
-        DISCIPLINES.append(dict(name=j["discipline"], expertise={j["expertise"]}))
+        COURSES.append(dict(name=j["course"], expertise={j["expertise"]}))
 
 SEEKERS = [
     ("جعفر", "عسکری", "ENFP"),
