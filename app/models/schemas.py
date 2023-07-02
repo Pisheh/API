@@ -7,7 +7,7 @@ from datetime import timedelta, datetime
 from enum import Enum
 import re
 
-__phone_num_re = re.compile(r"^09(\d{9})$")
+phone_num_re = re.compile(r"^09(\d{9})$")
 
 
 class ExamTypes(str, Enum):
@@ -36,7 +36,7 @@ class PhoneNumber(str):
     def validate(cls, v):
         if not isinstance(v, str):
             raise TypeError("string required")
-        m = __phone_num_re.fullmatch(v)
+        m = phone_num_re.fullmatch(v)
         if not m:
             raise ValueError("invalid phone number format")
         return cls(m[1])
