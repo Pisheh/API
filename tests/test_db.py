@@ -119,7 +119,7 @@ class TestAddData:
         for i, employer in enumerate(employers, 1):
             user = User.create(
                 email=f"example{i}@example.com",
-                phone_number=f"1234567{i:02d}",
+                phone_number=f"091234567{i:02d}",
                 pass_hash=User.hash_password(f"password{i}"),
                 role=Role.employer,
             )
@@ -130,7 +130,7 @@ class TestAddData:
         for i, (firstname, lastname, personality) in enumerate(SEEKERS, i + 1):
             user = User.create(
                 email=f"example{i}@example.com",
-                phone_number=f"1234567{i:02d}",
+                phone_number=f"091234567{i:02d}",
                 pass_hash=User.hash_password(f"password{i}"),
                 role=Role.seeker,
             )

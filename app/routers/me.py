@@ -1,17 +1,9 @@
-from fastapi import APIRouter, HTTPException, status, Security
-from fastapi_utils.inferring_router import InferringRouter
-from fastapi_utils.cbv import cbv
+from fastapi import APIRouter, Security
 from app.models.schemas import (
-    UserQuery,
-    UserQueryResult,
     MyInfoSchema,
-    LoginInfo,
-    LoginResult,
-    SignupInfo,
     PersonalitySchema,
 )
-from app.models.dbmodel import Seeker, Employer, User, Role
-from peewee import IntegrityError
+from app.models.dbmodel import User
 from app.deps import get_current_user, Scopes
 from typing import Annotated
 

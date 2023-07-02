@@ -7,7 +7,7 @@ from datetime import timedelta, datetime
 from enum import Enum
 import re
 
-phone_num_re = re.compile(r"^09(\d{9})$")
+phone_num_re = re.compile(r"^09\d{9}$")
 
 
 class ExamTypes(str, Enum):
@@ -28,7 +28,7 @@ class PhoneNumber(str):
     @classmethod
     def __modify_schema__(cls, field_schema):
         field_schema.update(
-            pattern=r"^09(\d{9})$",
+            pattern=r"^09\d{9}$",
             examples=["09123456789"],
         )
 
@@ -39,7 +39,7 @@ class PhoneNumber(str):
         m = phone_num_re.fullmatch(v)
         if not m:
             raise ValueError("invalid phone number format")
-        return cls(m[1])
+        return cls(m)
 
     def __repr__(self):
         return f"PhoneNumber({super().__repr__()})"

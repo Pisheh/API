@@ -290,7 +290,7 @@ class User(BaseModel):
     id = FixedCharField(22, default=shortuuid.uuid, primary_key=True)
     avatar = CharField(null=True)
     email = FixedCharField(64, index=True, unique=True)
-    phone_number = FixedCharField(9, index=True, unique=True)
+    phone_number = FixedCharField(11, index=True, unique=True)
     pass_hash = CharField()
     role = EnumField(Role)
     disabled = BooleanField(default=False)
