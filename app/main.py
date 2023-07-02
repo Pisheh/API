@@ -162,7 +162,7 @@ async def login(login_info: Annotated[OAuth2PasswordRequestForm, Depends()]):
             refresh_token=create_refresh_token(user),
             user_info=UserQueryResult(
                 firstname=user.seeker.firstname if user.role == Role.seeker else None,
-                lastname=user.seeker.firstname if user.role == Role.seeker else None,
+                lastname=user.seeker.lastname if user.role == Role.seeker else None,
                 co_name=user.employer.co_name if user.role == Role.employer else None,
                 role=user.role,
             ),
