@@ -141,6 +141,16 @@ class UserSchema(BaseModel):
     seeker: SeekerInfo | None = None
 
 
+class MyInfoSchema(BaseModel):
+    id: str
+    avatar: str = None
+    email: EmailStr
+    phone_number: PhoneNumber
+    role: Role
+    employer: EmployerInfo | None = None
+    seeker: SeekerInfo | None = None
+
+
 class SignupInfo(BaseModel):
     email = EmailStr
     phone_number = PhoneNumber

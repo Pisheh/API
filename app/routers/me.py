@@ -4,7 +4,7 @@ from fastapi_utils.cbv import cbv
 from app.models.schemas import (
     UserQuery,
     UserQueryResult,
-    UserSchema,
+    MyInfoSchema,
     LoginInfo,
     LoginResult,
     SignupInfo,
@@ -22,8 +22,8 @@ router = APIRouter()
 @router.get("/")
 async def get_me(
     current_user: Annotated[User, Security(get_current_user, scopes=Scopes.me)]
-) -> UserSchema:
-    return current_user.to_schema(UserSchema)
+) -> MyInfoSchema:
+    return current_user.to_schema(MyInfoSchema)
 
 
 @router.delete("/")
