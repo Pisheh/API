@@ -29,10 +29,22 @@ from app.models.schemas import (
     LoginResult,
     SignupInfo,
 )
-from app.models.dbmodel import Seeker, Employer, User, Role, Job, database_proxy
+from app.models.dbmodel import (
+    Seeker,
+    Employer,
+    User,
+    Role,
+    Job,
+    database_proxy,
+    JobRequest,
+)
 from app.utils import create_access_token, create_refresh_token, RefreshTokenData
 from app.deps import decode_refresh_token
 from pydantic import BaseModel
+import redis.asyncio as redis
+
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 
 app = FastAPI()
 app.include_router(me.router, prefix="/me", tags=["User profile"])
@@ -74,6 +86,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.on_event("startup")
 async def startup():
+    redis = redis.from_url("redis://localhost", encoding="utf-8", decode_responses=True)
+    await FastAPILimiter.init(redis)
     db_.connect()
 
 
@@ -95,19 +109,16 @@ app.add_middleware(
 )
 
 
-expire_check = None
-
-
 async def expire_jobs():
-    global expire_check
-    if (not expire_check) or datetime.now() - expire_check >= timedelta(hours=2):
-        for job in Job.select():
-            job.expire = job.expire_on <= datetime.now()
-        expire_check = datetime.now()
+    for job in Job.select().where(Job.expire_on <= datetime.now()):
+        job.expired = True
+        job.save()
 
 
 async def expire_job_requests():
-    raise NotImplemented  # TODO: expire job reauests
+    for jr in JobRequest.select().where(JobRequest.expire_on <= datetime.now()):
+        jr.expired = True
+        jr.save()
 
 
 @app.on_event("startup")
@@ -151,7 +162,7 @@ async def check_user(login_info: UserQuery) -> UserQueryResult:
         )
 
 
-@app.post("/login")
+@app.post("/login", dependencies=[Depends(RateLimiter(times=2, seconds=3))])
 async def login(
     login_info: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> LoginResult:
@@ -175,7 +186,7 @@ async def login(
 
 @app.post("/token")
 async def refresh_token(user: Annotated[User, Depends(decode_refresh_token)]):
-    return dict(
+    return LoginResult(
         access_token=create_access_token(user),
         refresh_token=create_refresh_token(user),
         user_info=UserQueryResult(
@@ -187,7 +198,7 @@ async def refresh_token(user: Annotated[User, Depends(decode_refresh_token)]):
     )
 
 
-@app.post("/signup")
+@app.post("/signup", dependencies=[Depends(RateLimiter(times=2, seconds=5))])
 async def signup(signup_info: SignupInfo) -> UserSchema:
     if not (signup_info.employer or signup_info.seeker):
         raise HTTPException(
