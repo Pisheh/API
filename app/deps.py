@@ -1,6 +1,6 @@
 from typing import Union, Any, Literal, Annotated
 from datetime import datetime
-from fastapi import Depends, HTTPException, status, Security
+from fastapi import Depends, HTTPException, status, Security, Body
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt, JWTError
 from pydantic import ValidationError
@@ -112,7 +112,9 @@ class get_user_or_none:
             return None
 
 
-async def decode_refresh_token(token: str, refresh_token: str):
+async def decode_refresh_token(
+    token: Annotated[str, Body()], refresh_token: Annotated[str, Body()]
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
