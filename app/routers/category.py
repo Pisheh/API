@@ -25,7 +25,7 @@ async def get_categories(
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(le=100, ge=1)] = 10,
     user: Annotated[User | None, Depends(get_user_or_none(Scopes.seeker))] = None,
-) -> Any:
+) -> CategoryPage:
     q = JobCategory.slug == JobCategory.slug
     if course:
         q = JobCategory.course == course
