@@ -296,7 +296,6 @@ class User(BaseModel):
     disabled = BooleanField(default=False)
     seeker = ForeignKeyField(Seeker, backref="account_set", null=True)
     employer = ForeignKeyField(Employer, backref="account_set", null=True)
-    logged_in = BooleanField(default=False)
     visible = BooleanField(default=True)
 
     def verify_password(self, password):
