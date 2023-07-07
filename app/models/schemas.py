@@ -151,6 +151,27 @@ class MyInfoSchema(BaseModel):
     seeker: SeekerInfo | None = None
 
 
+# update me
+class UpdateEmployerInfo(BaseModel):
+    co_name: str
+    city: str
+
+
+class UpdateSeekerInfo(BaseModel):
+    firstname: str
+    lastname: str
+
+
+class UpdateUserInfo(BaseModel):
+    email: EmailStr
+    phone_number: PhoneNumber
+    employer: UpdateEmployerInfo | None = None
+    seeker: UpdateSeekerInfo | None = None
+
+
+# ------------------------
+
+
 class SignupInfo(BaseModel):
     email = EmailStr
     phone_number = PhoneNumber
@@ -163,7 +184,12 @@ class SignupInfo(BaseModel):
 class LoginResult(BaseModel):
     access_token: str = Field(alias="access_token")
     refresh_token: str = Field(alias="refresh_token")
+    sudo_token: str
     user_info: UserQueryResult
+
+
+class SudoToken(BaseModel):
+    sudo_token: str
 
 
 class Answer(BaseModel):

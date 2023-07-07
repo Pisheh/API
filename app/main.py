@@ -28,6 +28,7 @@ from app.models.schemas import (
     LoginInfo,
     LoginResult,
     SignupInfo,
+    SudoToken,
 )
 from app.models.dbmodel import (
     Seeker,
@@ -38,7 +39,7 @@ from app.models.dbmodel import (
     database_proxy,
     JobRequest,
 )
-from app.utils import create_access_token, create_refresh_token, RefreshTokenData
+from app.utils import create_access_token, create_refresh_token, create_sudo_token
 from app.deps import decode_refresh_token
 from pydantic import BaseModel
 import redis.asyncio as redis
@@ -169,11 +170,10 @@ async def login(
     user = await get_user(login_info.username)
 
     if user and user.verify_password(login_info.password):
-        user.logged_in = True
-        user.save()
         return LoginResult(
             access_token=create_access_token(user),
             refresh_token=create_refresh_token(user),
+            sudo_token=create_sudo_token(user),
             user_info=UserQueryResult(
                 firstname=user.seeker.firstname if user.role == Role.seeker else None,
                 lastname=user.seeker.lastname if user.role == Role.seeker else None,
@@ -181,6 +181,17 @@ async def login(
                 role=user.role,
             ),
         )
+    raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
+
+
+@app.post("/sudo", dependencies=[Depends(RateLimiter(times=2, seconds=3))])
+async def get_sudo_token(
+    login_info: Annotated[OAuth2PasswordRequestForm, Depends()]
+) -> SudoToken:
+    user = await get_user(login_info.username)
+
+    if user and user.verify_password(login_info.password):
+        return SudoToken(sudo_token=create_sudo_token(user))
     raise HTTPException(status.HTTP_401_UNAUTHORIZED, "login.incorrect_password")
 
 

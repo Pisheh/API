@@ -1,18 +1,21 @@
 from typing import Union, Any, Literal, Annotated
 from datetime import datetime
-from fastapi import Depends, HTTPException, status, Security, Body
+from fastapi import Depends, HTTPException, status, Security, Body, Header
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt, JWTError
 from pydantic import ValidationError
 from peewee import DoesNotExist
 from enum import Enum
+from app.models.schemas import SudoToken
 
 from app.utils import (
     ALGORITHM,
     JWT_SECRET_KEY,
     JWT_REFRESH_SECRET_KEY,
+    JWT_SUDO_SECRET_KEY,
     AccessTokenData,
     RefreshTokenData,
+    SudoTokenData,
 )
 from app.models.dbmodel import User
 
@@ -65,13 +68,9 @@ async def get_current_user(
         token_data = AccessTokenData(**payload)
         timezone = token_data.exp.tzinfo
         user = User.get_by_id(token_data.id)
-        if not user.logged_in:
-            raise credentials_exception
         if user.pass_hash != token_data.pass_hash or token_data.exp < datetime.now(
             timezone
         ):
-            user.logged_in = False
-            user.save()
             raise credentials_exception
         if user.disabled:
             raise HTTPException(status_code=400, detail="Inactive user")
@@ -98,7 +97,8 @@ class get_user_or_none:
         try:
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
             token_data = AccessTokenData(**payload)
-            if datetime.fromtimestamp(token_data.exp) < datetime.now():
+            timezone = token_data.exp.tzinfo
+            if datetime.fromtimestamp(token_data.exp) < datetime.now(timezone):
                 return None
             user = User.get_by_id(token_data.id)
             if user.disabled:
@@ -131,17 +131,32 @@ async def decode_refresh_token(
             user = User.get_by_id(token_data.id)
         else:
             raise credentials_exception
-        if not user.logged_in:
-            raise credentials_exception
         if (
             user.pass_hash != token_data.pass_hash
             or refresh_token_data.exp < datetime.now(timezone)
         ):
-            user.logged_in = False
-            user.save()
             raise credentials_exception
         if user.disabled:
             raise HTTPException(status_code=400, detail="Inactive user")
         return user
     except (JWTError, ValidationError, DoesNotExist):
         raise credentials_exception
+
+
+async def sudo_access(
+    user: Annotated[User, Depends(get_current_user)],
+    sudo_token: Annotated[str, Header()],
+) -> bool:
+    try:
+        payload = jwt.decode(
+            sudo_token.sudo_token, JWT_SUDO_SECRET_KEY, algorithms=[ALGORITHM]
+        )
+        token_data = SudoTokenData(**payload)
+        timezone = token_data.exp.tzinfo
+        if token_data.exp >= datetime.now(timezone) and user.id == token_data.id:
+            return True
+    except (JWTError, ValidationError):
+        pass
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid sudo_token"
+    )
