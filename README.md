@@ -25,6 +25,7 @@ python -m pytest
 ```bash
 export JWT_SECRET_KEY=$(openssl rand -base64 32)
 export JWT_REFRESH_SECRET_KEY=$(openssl rand -base64 32)
+export JWT_SUDO_SECRET_KEY=$(openssl rand -base64 32)
 ```
 
 ### Run server
