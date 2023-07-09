@@ -1,8 +1,15 @@
 from fastapi import APIRouter, Depends, Query, Path, HTTPException, status, Security
 from app.deps import get_user_or_none, Scopes
 from typing import Annotated, Literal
-from app.models.dbmodel import Guide, User, JobCategory, Personality
-from app.models.schemas import GuideItem, GuideSchema, Role, GuidesPage, PaginationMeta
+from app.models.dbmodel import Guide, User, JobCategory, Personality, ForeignGuideMeta
+from app.models.schemas import (
+    GuideItem,
+    GuideSchema,
+    Role,
+    GuidesPage,
+    PaginationMeta,
+    ForeignGuideMotivation,
+)
 from ordered_set import OrderedSet
 from peewee import IntegrityError
 from pydantic import PositiveInt
@@ -48,6 +55,43 @@ async def search_guides(
         guides = []
         for jc in JobCategory.select().where(q).paginate(page, per_page):
             guides.extend([guide.to_schema(GuideItem) for guide in jc.guides])
+        return GuidesPage(
+            meta=PaginationMeta(
+                total_count=count,
+                current_page=page,
+                page_count=pages_count,
+                per_page=per_page,
+            ),
+            guides=guides,
+        )
+    else:
+        HTTPException(400, "bad_pagination")
+
+
+@router.get("/foreign/search")
+async def search_foreign_guidance(
+    course: Annotated[str, Query()] = None,
+    grade: Annotated[str, Query()] = None,
+    motivation: Annotated[ForeignGuideMotivation, Query] = None,
+    per_page: Annotated[int, Query(ge=1, le=100)] = 10,
+    page: Annotated[int, Query(ge=1)] = 1,
+):
+    q = ForeignGuideMeta.id == ForeignGuideMeta.id
+    if course:
+        q = ForeignGuideMeta.course == course
+    if grade:
+        q &= ForeignGuideMeta.grade == grade
+    if motivation:
+        q &= ForeignGuideMeta.motivation == motivation
+
+    count = ForeignGuideMeta.select().where(q).count()
+    if count == 0:
+        raise HTTPException(status.HTTP_204_NO_CONTENT)
+    pages_count = ceil(count / per_page)
+    if page <= pages_count:
+        guides = []
+        for fgm in ForeignGuideMeta.select().where(q).paginate(page, per_page):
+            guides.extend([guide.to_schema(GuideItem) for guide in fgm.guides])
         return GuidesPage(
             meta=PaginationMeta(
                 total_count=count,
