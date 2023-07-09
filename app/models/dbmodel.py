@@ -9,7 +9,14 @@ from peewee import callable_
 import datetime
 from datetime import timedelta
 import pydantic
-from .schemas import SkillItem, EmployerSchema, UserSchema, Role, ExamTypes
+from .schemas import (
+    SkillItem,
+    EmployerSchema,
+    UserSchema,
+    Role,
+    ExamTypes,
+    ForeignGuideMotivation,
+)
 from typing import Literal
 from slugify import slugify
 import uuid
@@ -174,6 +181,14 @@ class JobCategory(BaseModel):
 
 
 @add_table
+class ForeignGuideMeta(BaseModel):
+    course = CharField()
+    grade = CharField()
+    motivation = EnumField(ForeignGuideMotivation)
+    # guides
+
+
+@add_table
 class Guide(BaseModel):
     slug = FixedCharField(100, primary_key=True)
     title = CharField()
@@ -181,6 +196,7 @@ class Guide(BaseModel):
     basic = TextField()
     advanced = TextField(null=True)
     category = ForeignKeyField(JobCategory, backref="guides")
+    foreign_meta = ForeignKeyField(ForeignGuideMeta, backref="guides")
 
     @property
     def roadmap(self):
@@ -465,22 +481,3 @@ class SkillTimeline(BaseModel):
     @property
     def courses(self):
         return self.skill.courses
-
-
-@add_table
-class ForeignGuide(BaseModel):
-    slug = FixedCharField(100, primary_key=True)
-    course = CharField()
-    grade = CharField()
-    motivation = CharField()
-    title = CharField()
-    summary = CharField(null=True)
-    basic = TextField()
-    advanced = TextField(null=True)
-    category = ForeignKeyField(JobCategory)
-
-    @property
-    def roadmap(self):
-        return self.timeline.select().order_by(SkillTimeline.index)
-
-    # timeline < SkillTimeline.guide

@@ -20,6 +20,12 @@ class Role(str, Enum):
     employer = "employer"
 
 
+class ForeignGuideMotivation(str, Enum):
+    education = "education"
+    work = "work"
+    both = "both"
+
+
 class PhoneNumber(str):
     @classmethod
     def __get_validators__(cls):
