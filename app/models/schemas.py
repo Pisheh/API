@@ -164,6 +164,8 @@ class UpdateSeekerInfo(BaseModel):
 
 class UpdateUserInfo(BaseModel):
     email: EmailStr
+    password: str = Field(min_length=8)
+    password_confirm: str = Field(min_length=8)
     phone_number: PhoneNumber
     employer: UpdateEmployerInfo | None = None
     seeker: UpdateSeekerInfo | None = None

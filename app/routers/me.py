@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Security, Depends, Response, status
+from fastapi import APIRouter, Security, Depends, Response, status, HTTPException
 from app.models.schemas import MyInfoSchema, PersonalitySchema, UpdateUserInfo, Role
 from app.models.dbmodel import User
 from app.deps import get_current_user, Scopes, sudo_access
@@ -29,8 +29,11 @@ async def update_profile(
     data: UpdateUserInfo,
     response: Response,
 ) -> MyInfoSchema:
+    if data.password != data.password_confirm:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="password mismatch")
     user.email = data.email
     user.phone_number = data.phone_number
+    user.pass_hash = User.hash_password(data.password)
     s = user.save() == 1
     if user.role == Role.employer:
         employer = user.employer
