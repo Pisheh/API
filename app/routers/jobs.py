@@ -37,7 +37,7 @@ async def get_jobs(
             jobs=jobs,
         )
     else:
-        HTTPException(400, "jobs.bad_pagination")
+        HTTPException(400, "bad_pagination")
 
 
 @router.get("/{job_id}")

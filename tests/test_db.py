@@ -96,7 +96,7 @@ class TestAddData:
             category = job["category"]
             personalities = category["personalities"]
             del category["personalities"]
-            category["slug"] = slugify(category["title"])
+            category["slug"] = slugify(category["title"] + "-" + category["course"])
             c = JobCategory.get_or_none(JobCategory.slug == category["slug"])
             if not c:
                 c = JobCategory.create(**category)
@@ -180,7 +180,7 @@ class TestAddData:
         for category in JobCategory.select().order_by(fn.Random()):
             for i in range(randint(1, 3)):
                 guide = Guide.create(
-                    title=f"راهنمای هدایت شغلی برای {category.title} - ({i})",
+                    title=f"راهنمای هدایت شغلی برای {category.title} رشته {category.course} - ({i})",
                     summary=f"این راهنما شما را برای مسیر موفقیت در شغل {category.title} کمک می‌کند",
                     basic=PERSIAN_LOREM,
                     advanced=PERSIAN_LOREM * 3,

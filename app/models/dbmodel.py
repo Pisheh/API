@@ -465,3 +465,22 @@ class SkillTimeline(BaseModel):
     @property
     def courses(self):
         return self.skill.courses
+
+
+@add_table
+class ForeignGuide(BaseModel):
+    slug = FixedCharField(100, primary_key=True)
+    course = CharField()
+    grade = CharField()
+    motivation = CharField()
+    title = CharField()
+    summary = CharField(null=True)
+    basic = TextField()
+    advanced = TextField(null=True)
+    category = ForeignKeyField(JobCategory)
+
+    @property
+    def roadmap(self):
+        return self.timeline.select().order_by(SkillTimeline.index)
+
+    # timeline < SkillTimeline.guide

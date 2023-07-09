@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/search")
-async def get_categories(
+async def search_guides(
     course: Annotated[str, Query()] = None,
     expertise: Annotated[str, Query()] = None,
     min_salary: Annotated[int, Query(ge=1)] = None,
@@ -45,6 +45,9 @@ async def get_categories(
         raise HTTPException(status.HTTP_204_NO_CONTENT)
     pages_count = ceil(count / per_page)
     if page <= pages_count:
+        guides = []
+        for jc in JobCategory.select().where(q).paginate(page, per_page):
+            guides.extend([guide.to_schema(GuideItem) for guide in jc.guides])
         return GuidesPage(
             meta=PaginationMeta(
                 total_count=count,
@@ -52,11 +55,7 @@ async def get_categories(
                 page_count=pages_count,
                 per_page=per_page,
             ),
-            guides=[
-                j.guide.to_schema(GuideItem)
-                for j in JobCategory.select().where(q).paginate(page, per_page)
-                if j.guide is not None
-            ],
+            guides=guides,
         )
     else:
         HTTPException(400, "bad_pagination")
