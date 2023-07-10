@@ -195,8 +195,8 @@ class Guide(BaseModel):
     summary = CharField(null=True)
     basic = TextField()
     advanced = TextField(null=True)
-    category = ForeignKeyField(JobCategory, backref="guides")
-    foreign_meta = ForeignKeyField(ForeignGuideMeta, backref="guides")
+    category = ForeignKeyField(JobCategory, backref="guides", null=True)
+    foreign_meta = ForeignKeyField(ForeignGuideMeta, backref="guides", null=True)
 
     @property
     def roadmap(self):
