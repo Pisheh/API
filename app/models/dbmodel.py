@@ -16,6 +16,8 @@ from .schemas import (
     Role,
     ExamTypes,
     ForeignGuideMotivation,
+    RequestState,
+    JobType,
 )
 from typing import Literal
 from slugify import slugify
@@ -166,6 +168,7 @@ class JobCategory(BaseModel):
     expertise = CharField()
     min_salary = IntegerField(null=True)
     max_salary = IntegerField(null=True)
+    type = EnumField(JobType)
 
     # personalities <> Personality.job_categories
     # jobs < Job.category
@@ -278,6 +281,8 @@ class Seeker(BaseModel):
     firstname = CharField()
     lastname = CharField()
     cv_content = TextField(null=True)
+    req_lim_count = IntegerField(default=0)
+    req_lim_date = DateTimeField(null=True)
 
     @property
     def account(self) -> "User":
@@ -402,7 +407,7 @@ class Job(BaseModel):
     expired = BooleanField(False, default=False)
     employer = ForeignKeyField(Employer, backref="jobs")
     day_time = CharField(40)
-    type = CharField(40)
+    requests_count = IntegerField(default=0)
 
     # requests < JobRequests.job
 
@@ -453,7 +458,7 @@ class JobRequest(BaseModel):
     created_on = DateTimeField(default=datetime.datetime.now)
     expire_on = DateTimeField(default=datetime.datetime.now)
     expired = BooleanField(default=False)
-    approved = BooleanField(default=False)
+    state = EnumField(RequestState, default=RequestState.processing)
 
 
 @add_table

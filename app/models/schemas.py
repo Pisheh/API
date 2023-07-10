@@ -1,7 +1,7 @@
 from pydantic import EmailStr, validator, PositiveInt, Field
 from fastapi_utils.api_model import APIModel as BaseModel
 from pydantic.fields import ModelField
-from typing import Literal, ForwardRef
+from typing import Literal, Annotated
 from uuid import UUID
 from datetime import timedelta, datetime
 from enum import Enum
@@ -24,6 +24,17 @@ class ForeignGuideMotivation(str, Enum):
     education = "education"
     work = "work"
     both = "both"
+
+
+class RequestState(str, Enum):
+    processing = "processing"
+    denied = "denied"
+    accepted = "accepted"
+
+
+class JobType(str, Enum):
+    freelance = "freelance"
+    office = "office"
 
 
 class PhoneNumber(str):
@@ -339,6 +350,7 @@ class JobRequestSchema(BaseModel):
     job: JobSchema
     seeker: SeekerInfo
     expire_on: datetime
+    state: RequestState
 
 
 class JobRequestPage(BaseModel):

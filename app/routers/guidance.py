@@ -9,6 +9,7 @@ from app.models.schemas import (
     GuidesPage,
     PaginationMeta,
     ForeignGuideMotivation,
+    JobType,
 )
 from ordered_set import OrderedSet
 from peewee import IntegrityError
@@ -18,28 +19,20 @@ from math import ceil
 router = APIRouter()
 
 
-@router.get("/search")
-async def search_guides(
-    course: Annotated[str, Query()] = None,
+@router.get("/search/1", summary="I know Expertise I love")
+async def search1(
+    course: Annotated[str, Query()],
     expertise: Annotated[str, Query()] = None,
-    min_salary: Annotated[int, Query(ge=1)] = None,
-    max_salary: Annotated[int, Query(ge=1)] = None,
     personality: Annotated[str, Query()] = None,
-    page: Annotated[int, Query(ge=1)] = 1,
-    per_page: Annotated[int, Query(le=100, ge=1)] = 10,
+    page: Annotated[int, Query(alias="p", ge=1, description="page")] = 1,
+    per_page: Annotated[
+        int, Query(alias="pp", le=100, ge=1, description="per page")
+    ] = 10,
     user: Annotated[User | None, Depends(get_user_or_none(Scopes.seeker))] = None,
 ) -> GuidesPage:
-    q = JobCategory.slug == JobCategory.slug
-    if course:
-        q = JobCategory.course == course
-        if expertise:
-            q &= JobCategory.expertise == expertise
-
-    if min_salary:
-        q &= JobCategory.min_salary >= min_salary
-
-    if max_salary:
-        q &= JobCategory.max_salary >= max_salary
+    q = JobCategory.course == course
+    if expertise:
+        q &= JobCategory.expertise == expertise
 
     if user and personality:
         seeker = user.seeker
@@ -68,7 +61,39 @@ async def search_guides(
         HTTPException(400, "bad_pagination")
 
 
-@router.get("/foreign/search")
+@router.get("/search/2", summary="Search to find my Expertise")
+async def search2(
+    fav: Annotated[list[str], Query(description="User favorite courses")],
+    salary: Annotated[
+        tuple[int, int], Query(description="minimum and maximum salary")
+    ] = None,
+    type: Annotated[JobType, Query(description="Job types")] = None,
+    personality: Annotated[str, Query()] = None,
+    page: Annotated[int, Query(alias="p", ge=1, description="page")] = 1,
+    per_page: Annotated[
+        int, Query(alias="pp", ge=1, le=50, description="per page")
+    ] = 10,
+    user: Annotated[User | None, Depends(get_user_or_none(Scopes.seeker))] = None,
+) -> GuidesPage:
+    raise NotImplemented
+
+
+@router.get("/search/3", summary="Search for guidance in Iran")
+async def search3(
+    course: Annotated[str, Query()],
+    salary: Annotated[tuple[int, int], Query()] = None,
+    type: Annotated[JobType, Query()] = None,
+    personality: Annotated[str, Query()] = None,
+    page: Annotated[int, Query(alias="p", ge=1, description="page")] = 1,
+    per_page: Annotated[
+        int, Query(alias="pp", ge=1, le=50, description="per page")
+    ] = 10,
+    user: Annotated[User | None, Depends(get_user_or_none(Scopes.seeker))] = None,
+) -> GuidesPage:
+    ...
+
+
+@router.get("/search/4", summary="Search for foreign guidance")
 async def search_foreign_guidance(
     course: Annotated[str, Query()] = None,
     grade: Annotated[str, Query()] = None,

@@ -18,11 +18,17 @@ async def new_request(
 ):
     try:
         seeker = user.seeker
-        JobRequest.create(
-            job=Job.get_by_id(job_id),
-            seeker=seeker,
-            expire_on=datetime.now() + timedelta(30),
-        )
+        if seeker.req_lim_count < 5:
+            seeker.req_lim_count += 1
+            if seeker.req_lim_count == 1:
+                seeker.req_lim_date = datetime.now()
+            JobRequest.create(
+                job=Job.get_by_id(job_id),
+                seeker=seeker,
+                expire_on=datetime.now() + timedelta(30),
+            )
+        else:
+            raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "user.job")
     except DoesNotExist:
         raise HTTPException(status.HTTP_400_BAD_REQUEST)
 
