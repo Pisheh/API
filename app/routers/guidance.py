@@ -10,6 +10,7 @@ from app.models.schemas import (
     PaginationMeta,
     ForeignGuideMotivation,
     JobType,
+    Grade,
 )
 from ordered_set import OrderedSet
 from peewee import IntegrityError
@@ -94,9 +95,9 @@ async def search3(
 
 
 @router.get("/search/4", summary="Search for foreign guidance")
-async def search_foreign_guidance(
-    course: Annotated[str, Query()] = None,
-    grade: Annotated[str, Query()] = None,
+async def search4(
+    course: Annotated[str, Query()],
+    grade: Annotated[Grade, Query()] = None,
     motivation: Annotated[ForeignGuideMotivation, Query] = None,
     per_page: Annotated[int, Query(ge=1, le=100)] = 10,
     page: Annotated[int, Query(ge=1)] = 1,

@@ -37,6 +37,13 @@ class JobType(str, Enum):
     office = "office"
 
 
+class Grade(str, Enum):
+    diploma = "diploma"
+    licensee = "licensee"
+    master = "master"
+    doctorate = "Doctorate"
+
+
 class PhoneNumber(str):
     @classmethod
     def __get_validators__(cls):
