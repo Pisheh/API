@@ -44,6 +44,10 @@ class Grade(str, Enum):
     doctorate = "Doctorate"
 
 
+class Salary(str, Enum):
+    ...
+
+
 class PhoneNumber(str):
     @classmethod
     def __get_validators__(cls):

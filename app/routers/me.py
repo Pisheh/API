@@ -51,8 +51,8 @@ async def update_profile(
     return user.to_schema(MyInfoSchema)
 
 
-@router.get("/personlities")
-async def get_personlities(
+@router.get("/personalities")
+async def get_personalities(
     current_user: Annotated[
         User, Security(get_current_user, scopes=Scopes.me + Scopes.seeker)
     ]
