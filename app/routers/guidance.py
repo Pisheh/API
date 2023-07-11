@@ -110,7 +110,7 @@ async def search2(
 async def search3(
     course: Annotated[str, Query()],
     salary: Annotated[tuple[int, int], Query()] = None,
-    type: Annotated[JobType, Query()] = None,
+    type_: Annotated[JobType, Query(alias="type")] = None,
     personality: Annotated[str, Query()] = None,
     page: Annotated[int, Query(alias="p", ge=1, description="page")] = 1,
     per_page: Annotated[
@@ -118,7 +118,26 @@ async def search3(
     ] = 10,
     user: Annotated[User | None, Depends(get_user_or_none(Scopes.seeker))] = None,
 ) -> GuidesPage:
-    ...
+    query = JobCategory.course == course
+    if salary:
+        query &= (
+            JobCategory.min_salary >= salary[0] & JobCategory.max_salary <= salary[1]
+        )
+    if type_:
+        query &= JobCategory.type == type_
+
+    if user and personality:
+        seeker = user.seeker
+        try:
+            personality = Personality.get_by_id(personality)
+            if personality >> seeker.personalities:
+                query &= personality >> JobCategory.personalities
+        except:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="invalid personality id"
+            )
+
+    return get_guides(query, page, per_page)
 
 
 @router.get("/search/4", summary="Search for foreign guidance")
